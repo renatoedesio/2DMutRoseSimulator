@@ -29,6 +29,7 @@ class Simulator:
         self.navigations = [NavigationController(robot, self.environment) for robot in self.robots]
         self.selected_robot_index = 0
         self.command_console = CommandConsole()
+        self.mission_dispatcher = None
         self.font = pygame.font.Font(None, 28)
         self.running = True
 
@@ -38,6 +39,8 @@ class Simulator:
             delta_time = self.clock.tick(self.FPS) / 1000
             self._handle_events()
             self._handle_console_commands()
+            if self.mission_dispatcher is not None:
+                self.mission_dispatcher.update(delta_time)
             for navigation in self.navigations:
                 navigation.tick(delta_time)
             self._render()
@@ -63,6 +66,9 @@ class Simulator:
 
     def _inject_obstacle(self, position: tuple[int, int]) -> None:
         self.environment.add_injected_obstacle(position)
+
+    def set_mission_dispatcher(self, dispatcher) -> None:
+        self.mission_dispatcher = dispatcher
 
     @property
     def selected_robot(self) -> Robot:
@@ -117,6 +123,7 @@ class Simulator:
             robot.draw(self.screen, self.font, index == self.selected_robot_index)
         self._draw_location_label()
         self._draw_navigation_error()
+        self._draw_mission_status()
         self._draw_controls_hint()
         pygame.display.flip()
 
@@ -124,7 +131,7 @@ class Simulator:
         location = self.environment.get_location(self.selected_robot.position)
         name = location.name if location else "Área não identificada"
         label = self.font.render(
-            f"Selecionado: {self.selected_robot.label} — {self.selected_robot.role} | Local: {name}",
+            f"{self.selected_robot.label} {self.selected_robot.role} | {self.selected_robot.state.value} {self.selected_robot.battery:.0f}% | {self.selected_robot.current_task} | {name}",
             True,
             (20, 35, 45),
         )
@@ -141,6 +148,15 @@ class Simulator:
         background = label.get_rect(topleft=(12, 56)).inflate(16, 12)
         pygame.draw.rect(self.screen, (192, 57, 43), background, border_radius=5)
         self.screen.blit(label, (20, 62))
+
+    def _draw_mission_status(self) -> None:
+        if self.mission_dispatcher is None:
+            return
+        label = self.font.render(self.mission_dispatcher.status_text, True, (20, 35, 45))
+        background = label.get_rect(topleft=(12, 100)).inflate(16, 12)
+        pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
+        pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
+        self.screen.blit(label, (20, 106))
 
     def _draw_controls_hint(self) -> None:
         hint = self.font.render(

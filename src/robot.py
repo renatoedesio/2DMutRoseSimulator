@@ -1,9 +1,19 @@
-"""Representação física do robô; a decisão é feita pela Behavior Tree."""
+"""Representação física e estado operacional de um robô."""
+
+from enum import Enum
 
 import pygame
 
 from src.environment import Environment
 from src.scenarios import RobotDefinition
+
+
+class RobotState(str, Enum):
+    IDLE = "IDLE"
+    MOVING = "MOVING"
+    WAITING = "WAITING"
+    ACTING = "ACTING"
+    BLOCKED = "BLOCKED"
 
 
 class Robot:
@@ -16,6 +26,10 @@ class Robot:
         self.radius = 16
         self.speed = 220.0
         self.color = definition.color
+        self.battery_capacity = definition.battery_capacity
+        self.battery = definition.battery_capacity
+        self.state = RobotState.IDLE
+        self.current_task = "Sem tarefa"
 
     def move_towards(
         self, target: pygame.Vector2, delta_time: float, environment: Environment
@@ -42,7 +56,7 @@ class Robot:
         border_color = (241, 196, 15) if selected else (255, 255, 255)
         border_width = 4 if selected else 2
         pygame.draw.circle(screen, border_color, center, self.radius, border_width)
-        label = font.render(self.label, True, (20, 35, 45))
+        label = font.render(f"{self.label} {self.state.value} {self.battery:.0f}%", True, (20, 35, 45))
         label_box = label.get_rect(midbottom=(center[0], center[1] - self.radius - 5)).inflate(6, 4)
         pygame.draw.rect(screen, (255, 255, 255), label_box, border_radius=3)
         self._blit_centered(screen, label, label_box.center)
@@ -50,6 +64,11 @@ class Robot:
     @staticmethod
     def _blit_centered(screen: pygame.Surface, image: pygame.Surface, center: tuple[int, int]) -> None:
         screen.blit(image, image.get_rect(center=center))
+
+    def consume_battery(self, amount: float) -> bool:
+        """Consome bateria e retorna se ainda há carga disponível."""
+        self.battery = max(0.0, self.battery - amount)
+        return self.battery > 0.0
 
     def draw_route(
         self,

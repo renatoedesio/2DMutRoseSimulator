@@ -40,21 +40,69 @@ class Environment:
         self.locations = self._create_locations()
         self.injected_obstacles: list[tuple[tuple[int, int], int]] = []
 
-    def _create_example_assets_if_needed(self) -> None:
+    def _create_example_assets_if_needed(self, force: bool = False) -> None:
         """Cria uma planta simples apenas quando o usuário ainda não forneceu imagens."""
         self.asset_directory.mkdir(parents=True, exist_ok=True)
-        if self.map_path.exists() and self.collision_path.exists():
+        if not force and self.map_path.exists() and self.collision_path.exists():
             return
 
         width, height = self.size
         visual = pygame.Surface((width, height))
         collision = pygame.Surface((width, height))
-        if not self.map_path.exists():
+        write_map = force or not self.map_path.exists()
+        write_collision = force or not self.collision_path.exists()
+        if write_map:
             visual.fill(self.scenario.floor_color)
-        if not self.collision_path.exists():
+        if write_collision:
             collision.fill((255, 255, 255))
 
         wall_color = self.scenario.wall_color
+        obstacles, location_regions = self._example_layout(width, height)
+        if write_map:
+            for _, rectangle in location_regions:
+                pygame.draw.rect(visual, self.scenario.accent_color, rectangle)
+            for obstacle in obstacles:
+                pygame.draw.rect(visual, wall_color, obstacle)
+            pygame.image.save(visual, self.map_path)
+
+        if write_collision:
+            for location_name, rectangle in location_regions:
+                pygame.draw.rect(collision, self.location_colors[location_name], rectangle)
+            for obstacle in obstacles:
+                pygame.draw.rect(collision, (0, 0, 0), obstacle)
+            pygame.image.save(collision, self.collision_path)
+
+    def regenerate_example_assets(self) -> None:
+        """Recria intencionalmente o mapa de exemplo do cenário atual."""
+        self._create_example_assets_if_needed(force=True)
+
+    def _example_layout(
+        self, width: int, height: int
+    ) -> tuple[list[pygame.Rect], list[tuple[str, pygame.Rect]]]:
+        if self.scenario.asset_folder == "hospital":
+            obstacles = [
+                pygame.Rect(0, 0, width, 25),
+                pygame.Rect(0, height - 25, width, 25),
+                pygame.Rect(0, 0, 25, height),
+                pygame.Rect(width - 25, 0, 25, height),
+                pygame.Rect(0, 260, 210, 25),
+                pygame.Rect(270, 260, 420, 25),
+                pygame.Rect(750, 260, 210, 25),
+                pygame.Rect(0, 355, 210, 25),
+                pygame.Rect(270, 355, 420, 25),
+                pygame.Rect(750, 355, 210, 25),
+                pygame.Rect(467, 0, 25, 285),
+                pygame.Rect(467, 355, 25, 285),
+            ]
+            locations = [
+                ("RoomA", pygame.Rect(35, 35, 420, 215)),
+                ("RoomB", pygame.Rect(505, 35, 420, 215)),
+                ("RoomC", pygame.Rect(35, 385, 420, 215)),
+                ("SanitizationRoom", pygame.Rect(505, 385, 420, 215)),
+                ("Corredor_Principal", pygame.Rect(35, 285, 890, 60)),
+            ]
+            return obstacles, locations
+
         obstacles = [
             pygame.Rect(0, 0, width, 25),
             pygame.Rect(0, height - 25, width, 25),
@@ -66,21 +114,13 @@ class Environment:
             pygame.Rect(330, 420, 420, 26),
             pygame.Rect(724, 300, 26, 146),
         ]
-        if not self.map_path.exists():
-            for obstacle in obstacles:
-                pygame.draw.rect(visual, wall_color, obstacle)
-            pygame.draw.rect(visual, self.scenario.accent_color, (220, 165, 280, 135))
-            pygame.draw.rect(visual, self.scenario.accent_color, (370, 465, 310, 95))
-            pygame.image.save(visual, self.map_path)
-
-        if not self.collision_path.exists():
-            for obstacle in obstacles:
-                pygame.draw.rect(collision, (0, 0, 0), obstacle)
-            location_names = list(self.location_colors)
-            pygame.draw.rect(collision, self.location_colors[location_names[2]], (30, 30, 900, 85))
-            pygame.draw.rect(collision, self.location_colors[location_names[0]], (210, 150, 295, 175))
-            pygame.draw.rect(collision, self.location_colors[location_names[1]], (355, 455, 355, 120))
-            pygame.image.save(collision, self.collision_path)
+        location_names = list(self.location_colors)
+        locations = [
+            (location_names[2], pygame.Rect(30, 30, 900, 85)),
+            (location_names[0], pygame.Rect(210, 150, 295, 175)),
+            (location_names[1], pygame.Rect(355, 455, 355, 120)),
+        ]
+        return obstacles, locations
 
     def is_walkable(self, x: float, y: float, radius: int) -> bool:
         """Retorna se o disco completo do robô não sobrepõe pixels pretos."""

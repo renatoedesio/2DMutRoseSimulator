@@ -46,6 +46,44 @@ python farm.py
 
 O Hospital — Cenário 1 contém `A-1` e `A-2` (Limpadores), `B-1` e `B-2` (Organizadores). O Hospital — Cenário 2 contém os dois Limpadores e apenas `B-1` como Organizador.
 
+## Leitura de decomposições de missão
+
+O leitor de missões funciona fora do Pygame. Ele lê um `task_output.json`, resolve os nomes lógicos para o cenário e valida locais, papéis, capacidades e quantidade de robôs antes de qualquer execução.
+
+```powershell
+python mission_reader.py "C:\caminho\para\task_output.json" hospital-1
+```
+
+Os cenários disponíveis para validação são `hospital-1`, `hospital-2` e `farm`. Os vínculos entre os nomes do JSON externo e os nomes do cenário ficam em `src/scenarios.py`. No Hospital, os nomes do World DB são usados diretamente (`RoomA`, `RoomB`, `RoomC` e `SanitizationRoom`); na Fazenda, `FarmA` é ligado a `Campo`.
+
+Quando o experimento também tiver um World DB, valide os dois arquivos antes de executar a decomposição:
+
+```powershell
+python mission_reader.py "C:\caminho\para\task_output.json" hospital-1 --world-db "C:\caminho\para\World_db.xml"
+```
+
+O cenário Hospital foi configurado conforme o exemplo de World DB: `RoomA`, `RoomB`, `RoomC` e `SanitizationRoom`. Esses nomes aparecem diretamente em `collision.png`, cada um com uma cor distinta. Para reconstruir o mapa Hospital de exemplo após uma alteração intencional, execute `python reset_hospital_map.py`.
+
+## Execução especializada do Hospital
+
+As regras `door_open`, `is_clean` e `is_prepared` pertencem ao domínio Hospital, não ao núcleo de missões. Para executar a decomposição com essas regras e observar o estado final das salas, sem abrir o Pygame:
+
+```powershell
+python execute_hospital_mission.py "C:\caminho\para\task_output.json" "C:\caminho\para\World_db.xml" hospital-1
+```
+
+O núcleo apenas ordena tarefas e ações. A especialização Hospital avalia pré-condições e aplica efeitos como abrir porta, limpar sala, sanitizar robô e mover móveis. Outros domínios, como Fazenda, podem implementar suas próprias regras sem alterar o núcleo.
+
+## Execução visual de uma missão
+
+Para executar a decomposição dentro do simulador, com agentes, rotas, estados e bateria:
+
+```powershell
+python run_hospital_mission.py "C:\caminho\para\task_output.json" "C:\caminho\para\World_db.xml" hospital-1
+```
+
+Cada robô exibe seu identificador, estado e bateria. Os estados são `IDLE`, `MOVING`, `WAITING`, `ACTING` e `BLOCKED`. Durante uma ação, a bateria é consumida gradualmente; os efeitos no World State só são aplicados quando sua duração termina. Ações em grupo, como `move-furniture`, aguardam todos os robôs necessários chegarem ao local antes de começar.
+
 ## Imagens do ambiente
 
 Cada cenário tem sua própria pasta em `assets/`:
