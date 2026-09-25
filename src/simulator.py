@@ -16,6 +16,7 @@ class Simulator:
 
     FPS = 60
     WINDOW_SIZE = (1280, 800)
+    SIMULATION_SPEEDS = (0.25, 0.5, 1.0, 2.0, 4.0)
 
     def __init__(self, scenario: Scenario) -> None:
         pygame.init()
@@ -26,9 +27,11 @@ class Simulator:
         project_directory = Path(__file__).resolve().parent.parent
         self.environment = Environment(project_directory / "assets" / scenario.asset_folder, self.WINDOW_SIZE, scenario)
         self.screen = pygame.display.set_mode(self.environment.size)
+        self.control_icons = self._load_control_icons(project_directory / "assets" / "global")
         self.robots = [Robot(definition) for definition in scenario.robots]
         self.navigations = [NavigationController(robot, self.environment) for robot in self.robots]
         self.selected_robot_index = 0
+        self.simulation_speed_index = self.SIMULATION_SPEEDS.index(1.0)
         self.command_console = CommandConsole()
         self.mission_dispatcher = None
         self.font = pygame.font.Font(None, 28)
@@ -37,7 +40,7 @@ class Simulator:
     def run(self) -> None:
         self.command_console.start()
         while self.running:
-            delta_time = self.clock.tick(self.FPS) / 1000
+            delta_time = self.clock.tick(self.FPS) / 1000 * self.simulation_speed
             self._handle_events()
             self._handle_console_commands()
             if self.mission_dispatcher is not None:
@@ -58,6 +61,10 @@ class Simulator:
                 self._select_robot(-1)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
                 self._select_robot(1)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                self._change_simulation_speed(-1)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                self._change_simulation_speed(1)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.selected_navigation.set_target_point(event.pos)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
@@ -75,6 +82,15 @@ class Simulator:
     def _erase_injected_obstacle(self, position: tuple[int, int]) -> None:
         self.environment.remove_injected_obstacle(position)
 
+    @staticmethod
+    def _load_control_icons(asset_directory: Path) -> dict[str, pygame.Surface]:
+        """Carrega as setas do painel e as ajusta à altura do texto."""
+        icons: dict[str, pygame.Surface] = {}
+        for direction in ("up", "down", "left", "right"):
+            image = pygame.image.load(asset_directory / f"arrow_{direction}.png").convert_alpha()
+            icons[direction] = pygame.transform.smoothscale(image, (22, 22))
+        return icons
+
     def set_mission_dispatcher(self, dispatcher) -> None:
         self.mission_dispatcher = dispatcher
 
@@ -88,6 +104,19 @@ class Simulator:
 
     def _select_robot(self, direction: int) -> None:
         self.selected_robot_index = (self.selected_robot_index + direction) % len(self.robots)
+
+    @property
+    def simulation_speed(self) -> float:
+        return self.SIMULATION_SPEEDS[self.simulation_speed_index]
+
+    def _change_simulation_speed(self, direction: int) -> None:
+        self.simulation_speed_index = max(
+            0,
+            min(
+                len(self.SIMULATION_SPEEDS) - 1,
+                self.simulation_speed_index + direction,
+            ),
+        )
 
     def _handle_console_commands(self) -> None:
         command = self.command_console.get_next_command()
@@ -167,11 +196,25 @@ class Simulator:
         self.screen.blit(label, (background.x + 8, background.y + 6))
 
     def _draw_controls_hint(self) -> None:
-        hint = self.font.render(
-            "SETA CIMA / SETA BAIXO: trocar robô | Direito: injetar | Meio: apagar",
-            True,
-            (20, 35, 45),
+        text_color = (20, 35, 45)
+        fragments: list[pygame.Surface] = [
+            self.font.render(f"Velocidade: {self.simulation_speed:g}x ", True, text_color),
+            self.control_icons["left"],
+            self.control_icons["right"],
+            self.font.render(" | Trocar robô: ", True, text_color),
+            self.control_icons["up"],
+            self.control_icons["down"],
+            self.font.render(" | Botão direito: injetar | Botão meio: apagar", True, text_color),
+        ]
+        spacing = 4
+        hint = pygame.Surface(
+            (sum(fragment.get_width() for fragment in fragments) + spacing * (len(fragments) - 1), 24),
+            pygame.SRCALPHA,
         )
+        x_position = 0
+        for fragment in fragments:
+            hint.blit(fragment, (x_position, (hint.get_height() - fragment.get_height()) // 2))
+            x_position += fragment.get_width() + spacing
         background = hint.get_rect(
             bottomright=(self.screen.get_width() - 12, self.screen.get_height() - 12)
         ).inflate(16, 12)
