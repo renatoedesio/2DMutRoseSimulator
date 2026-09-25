@@ -44,6 +44,12 @@ python hospital_scenario_2.py
 python farm.py
 ```
 
+Para consultar todos os comandos principais, execute:
+
+```powershell
+python help.py
+```
+
 O Hospital — Cenário 1 contém `A-1` e `A-2` (Limpadores), `B-1` e `B-2` (Organizadores). O Hospital — Cenário 2 contém os dois Limpadores e apenas `B-1` como Organizador.
 
 ## Leitura de decomposições de missão
@@ -76,11 +82,21 @@ O núcleo apenas ordena tarefas e ações. A especialização Hospital avalia pr
 
 ## Execução visual de uma missão
 
-Para executar a decomposição dentro do simulador, com agentes, rotas, estados e bateria:
+As missões ficam agrupadas em pacotes autocontidos em `missions/<família>/<cenário>/`. Cada pacote contém `task_output.json`, `World_db.xml` e `manifest.json`, evitando que uma decomposição seja usada com o mundo errado.
+
+Para listar o catálogo:
 
 ```powershell
-python run_hospital_mission.py "C:\caminho\para\task_output.json" "C:\caminho\para\World_db.xml" hospital-1
+python start.py --list
 ```
+
+Para executar o pacote dentro do simulador, com agentes, rotas, estados e bateria:
+
+```powershell
+python start.py RoomPreparation scenario_1
+```
+
+Para apenas validar o pacote sem abrir a janela, acrescente `--validate`.
 
 Cada robô exibe seu identificador, estado e bateria. Os estados são `IDLE`, `MOVING`, `WAITING`, `ACTING` e `BLOCKED`. Durante uma ação, a bateria é consumida gradualmente; os efeitos no World State só são aplicados quando sua duração termina. Ações em grupo, como `move-furniture`, aguardam todos os robôs necessários chegarem ao local antes de começar.
 
