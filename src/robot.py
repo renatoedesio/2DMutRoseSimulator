@@ -56,7 +56,7 @@ class Robot:
         border_color = (241, 196, 15) if selected else (255, 255, 255)
         border_width = 4 if selected else 2
         pygame.draw.circle(screen, border_color, center, self.radius, border_width)
-        label = font.render(f"{self.label} {self.state.value} {self.battery:.0f}%", True, (20, 35, 45))
+        label = font.render(self.label, True, (20, 35, 45))
         label_box = label.get_rect(midbottom=(center[0], center[1] - self.radius - 5)).inflate(6, 4)
         pygame.draw.rect(screen, (255, 255, 255), label_box, border_radius=3)
         self._blit_centered(screen, label, label_box.center)

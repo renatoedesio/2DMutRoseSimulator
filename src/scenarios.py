@@ -46,10 +46,10 @@ HOSPITAL_SCENARIO_1 = Scenario(
     wall_color=(52, 73, 94),
     accent_color=(190, 210, 220),
     robots=(
-        RobotDefinition("A-1", "Limpador", (90, 90), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("A-2", "Limpador", (130, 90), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("B-1", "Organizador", (90, 170), (155, 89, 182), frozenset({"moveobject"})),
-        RobotDefinition("B-2", "Organizador", (130, 170), (155, 89, 182), frozenset({"moveobject"})),
+        RobotDefinition("A-1", "Limpador", (120, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("A-2", "Limpador", (260, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("B-1", "Organizador", (120, 220), (155, 89, 182), frozenset({"moveobject"})),
+        RobotDefinition("B-2", "Organizador", (260, 220), (155, 89, 182), frozenset({"moveobject"})),
     ),
     location_aliases={
         "RoomA": "RoomA",
@@ -69,9 +69,9 @@ HOSPITAL_SCENARIO_2 = Scenario(
     wall_color=(52, 73, 94),
     accent_color=(190, 210, 220),
     robots=(
-        RobotDefinition("A-1", "Limpador", (90, 90), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("A-2", "Limpador", (130, 90), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("B-1", "Organizador", (90, 170), (155, 89, 182), frozenset({"moveobject"})),
+        RobotDefinition("A-1", "Limpador", (120, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("A-2", "Limpador", (260, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("B-1", "Organizador", (120, 220), (155, 89, 182), frozenset({"moveobject"})),
     ),
     location_aliases=HOSPITAL_SCENARIO_1.location_aliases,
     role_aliases=HOSPITAL_SCENARIO_1.role_aliases,

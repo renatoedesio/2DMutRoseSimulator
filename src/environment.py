@@ -27,6 +27,9 @@ class Environment:
         self._create_example_assets_if_needed()
         self.map_image = pygame.image.load(self.map_path).convert()
         self.collision_mask = pygame.image.load(self.collision_path).convert()
+        # Preserva a máscara original para que obstáculos injetados possam ser
+        # removidos sem alterar paredes e regiões do cenário.
+        self._base_collision_mask = self.collision_mask.copy()
         self.location_mask = self.collision_mask
         self._collision_obstacles = pygame.mask.from_threshold(
             self.collision_mask, (0, 0, 0, 255), (20, 20, 20, 255)
@@ -72,34 +75,47 @@ class Environment:
                 pygame.draw.rect(collision, (0, 0, 0), obstacle)
             pygame.image.save(collision, self.collision_path)
 
-    def regenerate_example_assets(self) -> None:
+    def regenerate_example_assets(self, size: tuple[int, int] | None = None) -> None:
         """Recria intencionalmente o mapa de exemplo do cenário atual."""
+        if size is not None:
+            self.size = size
         self._create_example_assets_if_needed(force=True)
 
     def _example_layout(
         self, width: int, height: int
     ) -> tuple[list[pygame.Rect], list[tuple[str, pygame.Rect]]]:
         if self.scenario.asset_folder == "hospital":
+            scale_x = width / 960
+            scale_y = height / 640
+
+            def scaled(x: int, y: int, rect_width: int, rect_height: int) -> pygame.Rect:
+                return pygame.Rect(
+                    round(x * scale_x),
+                    round(y * scale_y),
+                    round(rect_width * scale_x),
+                    round(rect_height * scale_y),
+                )
+
             obstacles = [
-                pygame.Rect(0, 0, width, 25),
-                pygame.Rect(0, height - 25, width, 25),
-                pygame.Rect(0, 0, 25, height),
-                pygame.Rect(width - 25, 0, 25, height),
-                pygame.Rect(0, 260, 210, 25),
-                pygame.Rect(270, 260, 420, 25),
-                pygame.Rect(750, 260, 210, 25),
-                pygame.Rect(0, 355, 210, 25),
-                pygame.Rect(270, 355, 420, 25),
-                pygame.Rect(750, 355, 210, 25),
-                pygame.Rect(467, 0, 25, 285),
-                pygame.Rect(467, 355, 25, 285),
+                scaled(0, 0, 960, 25),
+                scaled(0, 615, 960, 25),
+                scaled(0, 0, 25, 640),
+                scaled(935, 0, 25, 640),
+                scaled(0, 260, 180, 25),
+                scaled(300, 260, 360, 25),
+                scaled(780, 260, 180, 25),
+                scaled(0, 355, 180, 25),
+                scaled(300, 355, 360, 25),
+                scaled(780, 355, 180, 25),
+                scaled(467, 0, 25, 285),
+                scaled(467, 355, 25, 285),
             ]
             locations = [
-                ("RoomA", pygame.Rect(35, 35, 420, 215)),
-                ("RoomB", pygame.Rect(505, 35, 420, 215)),
-                ("RoomC", pygame.Rect(35, 385, 420, 215)),
-                ("SanitizationRoom", pygame.Rect(505, 385, 420, 215)),
-                ("Corredor_Principal", pygame.Rect(35, 285, 890, 60)),
+                ("RoomA", scaled(35, 35, 420, 215)),
+                ("RoomB", scaled(505, 35, 420, 215)),
+                ("RoomC", scaled(35, 385, 420, 215)),
+                ("SanitizationRoom", scaled(505, 385, 420, 215)),
+                ("Corredor_Principal", scaled(35, 285, 890, 60)),
             ]
             return obstacles, locations
 
@@ -154,8 +170,13 @@ class Environment:
         if not self.is_walkable(destination.x, destination.y, safe_radius):
             return []
 
-        start = self._nearest_walkable_cell(origin, safe_radius)
-        goal = self._nearest_walkable_cell(destination, safe_radius)
+        # Além de encontrar uma célula livre, a conexão entre a posição real e
+        # a grade precisa ser livre. Sem isto, um caminho pode começar muito
+        # perto de uma quina e ser invalidado no tick seguinte.
+        start = self._nearest_walkable_cell(origin, safe_radius, visible_from=origin)
+        goal = self._nearest_walkable_cell(
+            destination, safe_radius, visible_from=destination
+        )
         if start is None or goal is None:
             return []
 
@@ -172,7 +193,10 @@ class Environment:
                 cells = self._reconstruct_path(came_from, goal)
                 waypoints = [self._cell_to_point(cell) for cell in cells[1:]]
                 waypoints.append((destination.x, destination.y))
-                return self._simplify_path(origin, waypoints, safe_radius)
+                # Mantemos os pequenos segmentos da grade. Cada um foi
+                # verificado para o raio seguro do robô, o que é mais estável
+                # que cortar uma quina com uma linha longa simplificada.
+                return waypoints
 
             for neighbor, step_cost in self._neighbors(current, safe_radius, walkable_cells):
                 new_cost = cost_so_far[current] + step_cost
@@ -193,11 +217,32 @@ class Environment:
         O mapa visual original não é alterado em disco; o círculo é desenhado
         sobre a tela e aplicado imediatamente à máscara de colisão em memória.
         """
-        pygame.draw.circle(self.collision_mask, (0, 0, 0), center, radius)
+        self.injected_obstacles.append((center, radius))
+        self._refresh_injected_obstacles()
+
+    def remove_injected_obstacle(self, position: tuple[int, int]) -> bool:
+        """Remove o obstáculo injetado mais próximo da posição indicada."""
+        candidates = [
+            obstacle
+            for obstacle in self.injected_obstacles
+            if math.dist(position, obstacle[0]) <= obstacle[1] + 12
+        ]
+        if not candidates:
+            return False
+
+        closest = min(candidates, key=lambda obstacle: math.dist(position, obstacle[0]))
+        self.injected_obstacles.remove(closest)
+        self._refresh_injected_obstacles()
+        return True
+
+    def _refresh_injected_obstacles(self) -> None:
+        """Reconstrói a colisão dinâmica sem modificar a máscara original."""
+        self.collision_mask = self._base_collision_mask.copy()
+        for center, radius in self.injected_obstacles:
+            pygame.draw.circle(self.collision_mask, (0, 0, 0), center, radius)
         self._collision_obstacles = pygame.mask.from_threshold(
             self.collision_mask, (0, 0, 0, 255), (20, 20, 20, 255)
         )
-        self.injected_obstacles.append((center, radius))
 
     def _get_robot_mask(self, radius: int) -> pygame.mask.Mask:
         if radius not in self._robot_masks:
@@ -223,7 +268,10 @@ class Environment:
         return True
 
     def _nearest_walkable_cell(
-        self, point: pygame.Vector2, robot_radius: int
+        self,
+        point: pygame.Vector2,
+        robot_radius: int,
+        visible_from: pygame.Vector2 | None = None,
     ) -> tuple[int, int] | None:
         base_cell = self._point_to_cell(point)
         for search_radius in range(8):
@@ -231,8 +279,13 @@ class Environment:
                 for column in range(base_cell[0] - search_radius, base_cell[0] + search_radius + 1):
                     cell = (column, row)
                     cell_point = self._cell_to_point(cell)
-                    if self.is_walkable(*cell_point, robot_radius):
-                        return cell
+                    if not self.is_walkable(*cell_point, robot_radius):
+                        continue
+                    if visible_from is not None and not self._has_clear_line(
+                        visible_from, pygame.Vector2(cell_point), robot_radius
+                    ):
+                        continue
+                    return cell
         return None
 
     def _neighbors(
@@ -258,6 +311,15 @@ class Environment:
                         walkable_cells[side] = self.is_walkable(*self._cell_to_point(side), robot_radius)
                 if not walkable_cells[side_a] or not walkable_cells[side_b]:
                     continue
+
+            # Nós vizinhos livres não bastam: o corpo circular pode ainda
+            # tocar uma quina entre eles. Valida também o segmento inteiro.
+            if not self._has_clear_line(
+                pygame.Vector2(self._cell_to_point(cell)),
+                pygame.Vector2(self._cell_to_point(candidate)),
+                robot_radius,
+            ):
+                continue
 
             neighbors.append((candidate, math.sqrt(2) if delta_x and delta_y else 1.0))
         return neighbors

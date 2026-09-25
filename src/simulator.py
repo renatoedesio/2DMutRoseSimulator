@@ -15,7 +15,7 @@ class Simulator:
     """Coordena eventos, atualização e renderização do ambiente robótico."""
 
     FPS = 60
-    WINDOW_SIZE = (960, 640)
+    WINDOW_SIZE = (1280, 800)
 
     def __init__(self, scenario: Scenario) -> None:
         pygame.init()
@@ -25,6 +25,7 @@ class Simulator:
 
         project_directory = Path(__file__).resolve().parent.parent
         self.environment = Environment(project_directory / "assets" / scenario.asset_folder, self.WINDOW_SIZE, scenario)
+        self.screen = pygame.display.set_mode(self.environment.size)
         self.robots = [Robot(definition) for definition in scenario.robots]
         self.navigations = [NavigationController(robot, self.environment) for robot in self.robots]
         self.selected_robot_index = 0
@@ -59,13 +60,20 @@ class Simulator:
                 self._select_robot(1)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.selected_navigation.set_target_point(event.pos)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
+                self._erase_injected_obstacle(event.pos)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 self._inject_obstacle(event.pos)
+            elif event.type == pygame.MOUSEMOTION and event.buttons[1]:
+                self._erase_injected_obstacle(event.pos)
             elif event.type == pygame.MOUSEMOTION and event.buttons[2]:
                 self._inject_obstacle(event.pos)
 
     def _inject_obstacle(self, position: tuple[int, int]) -> None:
         self.environment.add_injected_obstacle(position)
+
+    def _erase_injected_obstacle(self, position: tuple[int, int]) -> None:
+        self.environment.remove_injected_obstacle(position)
 
     def set_mission_dispatcher(self, dispatcher) -> None:
         self.mission_dispatcher = dispatcher
@@ -153,18 +161,20 @@ class Simulator:
         if self.mission_dispatcher is None:
             return
         label = self.font.render(self.mission_dispatcher.status_text, True, (20, 35, 45))
-        background = label.get_rect(topleft=(12, 100)).inflate(16, 12)
+        background = label.get_rect(topright=(self.screen.get_width() - 12, 12)).inflate(16, 12)
         pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
         pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
-        self.screen.blit(label, (20, 106))
+        self.screen.blit(label, (background.x + 8, background.y + 6))
 
     def _draw_controls_hint(self) -> None:
         hint = self.font.render(
-            "SETA CIMA / SETA BAIXO: trocar robô | Botão direito: injetar obstáculo",
+            "SETA CIMA / SETA BAIXO: trocar robô | Direito: injetar | Meio: apagar",
             True,
             (20, 35, 45),
         )
-        background = hint.get_rect(topright=(self.WINDOW_SIZE[0] - 12, 12)).inflate(16, 12)
+        background = hint.get_rect(
+            bottomright=(self.screen.get_width() - 12, self.screen.get_height() - 12)
+        ).inflate(16, 12)
         pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
         pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
         self.screen.blit(hint, (background.x + 8, background.y + 6))

@@ -18,7 +18,7 @@ def main() -> None:
         Simulator.WINDOW_SIZE,
         HOSPITAL_SCENARIO_1,
     )
-    environment.regenerate_example_assets()
+    environment.regenerate_example_assets(Simulator.WINDOW_SIZE)
     pygame.quit()
     print("Mapa Hospital recriado com RoomA, RoomB, RoomC e SanitizationRoom.")
 
