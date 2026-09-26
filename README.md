@@ -36,7 +36,9 @@ python -m pip install -r requirements.txt
 
 ## Execução
 
-Inicie o cenário desejado pelo seu próprio arquivo:
+### Modo manual
+
+Estes comandos abrem apenas o mapa e os robôs. A missão não é carregada automaticamente; os destinos precisam ser definidos por clique ou pelo comando `goto`:
 
 ```powershell
 python hospital_scenario_1.py
@@ -51,6 +53,20 @@ python help.py
 ```
 
 O Hospital — Cenário 1 contém `A-1` e `A-2` (Limpadores), `B-1` e `B-2` (Organizadores). O Hospital — Cenário 2 contém os dois Limpadores e apenas `B-1` como Organizador.
+
+### Modo missão automática
+
+Para carregar uma decomposição, conectar os agentes e executar todas as tarefas do pacote visualmente, use `start.py`. Por exemplo, para executar `RoomPreparation` no Hospital — Cenário 1:
+
+```powershell
+python start.py RoomPreparation scenario_1
+```
+
+Este é o comando correto para executar o cenário completo da missão. A opção `--validate` apenas valida o pacote e não abre a janela:
+
+```powershell
+python start.py RoomPreparation scenario_1 --validate
+```
 
 ## Leitura de decomposições de missão
 

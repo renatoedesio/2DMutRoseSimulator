@@ -60,6 +60,14 @@ class Robot:
         label_box = label.get_rect(midbottom=(center[0], center[1] - self.radius - 5)).inflate(6, 4)
         pygame.draw.rect(screen, (255, 255, 255), label_box, border_radius=3)
         self._blit_centered(screen, label, label_box.center)
+        battery_box = pygame.Rect(label_box.left, label_box.bottom + 2, label_box.width, 5)
+        battery_level = self.battery / self.battery_capacity if self.battery_capacity else 0.0
+        battery_level = max(0.0, min(1.0, battery_level))
+        pygame.draw.rect(screen, (80, 90, 95), battery_box, border_radius=2)
+        if battery_level > 0:
+            battery_fill = battery_box.copy()
+            battery_fill.width = round(battery_box.width * battery_level)
+            pygame.draw.rect(screen, (46, 204, 113), battery_fill, border_radius=2)
 
     @staticmethod
     def _blit_centered(screen: pygame.Surface, image: pygame.Surface, center: tuple[int, int]) -> None:

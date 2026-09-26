@@ -15,13 +15,17 @@ SIMULADOR ROBÓTICO 2D — AJUDA
 3. Validar um pacote sem abrir o simulador
    python start.py RoomPreparation scenario_1 --validate
 
-4. Executar uma missão catalogada
+4. Executar uma missão catalogada automaticamente (recomendado para experimentos)
    python start.py RoomPreparation scenario_1
 
-5. Abrir apenas um cenário, sem missão automática
+5. Abrir apenas o mapa em modo manual (não executa uma missão)
    python hospital_scenario_1.py
    python hospital_scenario_2.py
    python farm.py
+
+   Para o Hospital — Cenário 1:
+   - modo missão automática: python start.py RoomPreparation scenario_1
+   - modo manual:          python hospital_scenario_1.py
 
 6. Controles na janela
    SETA CIMA / SETA BAIXO  alterna o robô selecionado
