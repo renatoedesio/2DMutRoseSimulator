@@ -85,6 +85,13 @@ class HospitalMissionDomain:
         room = self.rooms.get(room_name)
         return room.door_open if room is not None else False
 
+    def room_statuses(self) -> list[tuple[str, bool, bool, bool]]:
+        """Fornece o estado das salas para o painel do simulador."""
+        return [
+            (name, state.door_open, state.is_clean, state.is_prepared)
+            for name, state in self.rooms.items()
+        ]
+
     def _evaluate_predicate(self, predicate: str, robot_labels: tuple[str, ...]) -> bool:
         negated = predicate.startswith("not ")
         expression = predicate.removeprefix("not ")

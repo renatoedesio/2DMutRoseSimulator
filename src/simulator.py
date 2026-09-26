@@ -178,6 +178,7 @@ class Simulator:
         self._draw_location_label()
         self._draw_navigation_error()
         self._draw_mission_status()
+        self._draw_room_status()
         self._draw_controls_hint()
         pygame.display.flip()
 
@@ -229,6 +230,48 @@ class Simulator:
         pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
         pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
         self.screen.blit(label, (background.x + 8, background.y + 6))
+
+    def _draw_room_status(self) -> None:
+        """Mostra o estado lógico atual de cada sala do domínio ativo."""
+        if self.mission_dispatcher is None:
+            return
+        room_statuses = getattr(self.mission_dispatcher.domain, "room_statuses", None)
+        if not callable(room_statuses):
+            return
+
+        text_color = (20, 35, 45)
+        positive_color = (39, 174, 96)
+        negative_color = (192, 57, 43)
+        fragments: list[tuple[pygame.Surface, int]] = []
+        for room_name, door_open, is_clean, is_organized in room_statuses():
+            display_name = {
+                "RoomA": "Room A",
+                "RoomB": "Room B",
+                "RoomC": "Room C",
+                "SanitizationRoom": "Sanitization Room",
+            }.get(room_name, room_name)
+            fragments.append((self.font.render(display_name, True, text_color), 4))
+            for label, value in (
+                ("DoorOpen", door_open),
+                ("Clean", is_clean),
+                ("Organized", is_organized),
+            ):
+                color = positive_color if value else negative_color
+                fragments.append((self.font.render(f"{label}: {value}", True, color), 0))
+            fragments[-1] = (fragments[-1][0], 8)
+
+        if not fragments:
+            return
+        width = max(fragment.get_width() for fragment, _ in fragments)
+        height = sum(fragment.get_height() + bottom_spacing for fragment, bottom_spacing in fragments)
+        background = pygame.Rect(0, 0, width + 16, height + 12)
+        background.topright = (self.screen.get_width() - 12, 58)
+        pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
+        pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
+        y_position = background.y + 6
+        for fragment, bottom_spacing in fragments:
+            self.screen.blit(fragment, (background.x + 8, y_position))
+            y_position += fragment.get_height() + bottom_spacing
 
     def _draw_controls_hint(self) -> None:
         text_color = (20, 35, 45)
