@@ -70,6 +70,42 @@ Este é o comando correto para executar o cenário completo da missão. A opçã
 python -m scripts RoomPreparation scenario_1 --validate
 ```
 
+### Experimentos MutROSe e recuperacao
+
+Para executar uma missao a partir de um mundo catalogado, informe o ID do
+mundo com `--world`. O comando copia o XML selecionado para o World DB ativo,
+executa o MutROSe, arquiva a decomposicao gerada e usa esse mesmo mundo no
+simulador.
+
+```powershell
+python -m scripts --list-worlds
+python -m scripts RoomPreparation scenario_1 --world AFFF_BFFV_CVVV --validate
+python -m scripts RoomPreparation scenario_1 --world AFFF_BFFV_CVVV
+```
+
+As decomposicoes geradas ficam em
+`mutrose/RoomPreparation/output/runs/<ID_DO_MUNDO>/task_output.json`.
+
+Cada execucao tambem declara uma politica de recuperacao:
+
+```powershell
+python -m scripts RoomPreparation scenario_1 --world AFFF_BFFV_CVVV --recovery baseline
+python -m scripts RoomPreparation scenario_1 --world AFFF_BFFV_CVVV --recovery dynamic_replanning
+python -m scripts RoomPreparation scenario_1 --world AFFF_BFFV_CVVV --recovery assumption_based
+```
+
+`baseline` encerra a missao quando ocorre falha. `dynamic_replanning` marca a
+falha para replanejamento pelo MutROSe. `assumption_based` marca a falha para
+avaliacao pelo futuro monitor de assumptions/contratos. O dispatcher registra
+em todos os casos o motivo, a tarefa e a acao que falharam.
+
+No estado atual, as tres politicas ja sao configuraveis e o evento de falha ja
+e estruturado. A etapa seguinte e o `WorldStateUpdater`: ele convertera o
+estado observado apos a falha em um novo `World_db.xml`. Somente entao
+`dynamic_replanning` deve chamar o MutROSe automaticamente; sem uma atualizacao
+de conhecimento, o planejador receberia o mesmo mundo e poderia produzir o
+mesmo plano.
+
 ## Leitura de decomposições de missão
 
 O leitor de missões funciona fora do Pygame. Ele lê um `task_output.json`, resolve os nomes lógicos para o cenário e valida locais, papéis, capacidades e quantidade de robôs antes de qualquer execução.

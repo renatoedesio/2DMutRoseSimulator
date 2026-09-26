@@ -7,6 +7,7 @@ import pygame
 from src.core.location import Location
 from src.core.mission.executor import TimedMissionDomain
 from src.core.mission.models import BoundMission, MissionTask
+from src.core.mission.recovery import FailureEvent, RecoveryStrategy, decide_recovery
 from src.core.robot import Robot, RobotState
 
 
@@ -24,7 +25,14 @@ class AgentMissionDispatcher:
 
     MOVING_BATTERY_PER_SECOND = 1.0
 
-    def __init__(self, bound_mission: BoundMission, domain: TimedMissionDomain, environment, navigations) -> None:
+    def __init__(
+        self,
+        bound_mission: BoundMission,
+        domain: TimedMissionDomain,
+        environment,
+        navigations,
+        recovery_strategy: RecoveryStrategy = RecoveryStrategy.BASELINE,
+    ) -> None:
         self.bound_mission = bound_mission
         self.domain = domain
         self.environment = environment
@@ -34,6 +42,9 @@ class AgentMissionDispatcher:
         self.active_task: ActiveTask | None = None
         self.completed = False
         self.error_message: str | None = None
+        self.recovery_strategy = recovery_strategy
+        self.failure_event: FailureEvent | None = None
+        self.recovery_action: str | None = None
 
     @property
     def status_text(self) -> str:
@@ -75,6 +86,8 @@ class AgentMissionDispatcher:
         self.active_task = None
         self.completed = False
         self.error_message = None
+        self.failure_event = None
+        self.recovery_action = None
 
     def _start_next_task(self) -> None:
         if self.next_task_index >= len(self.task_keys):
@@ -194,6 +207,12 @@ class AgentMissionDispatcher:
         return location
 
     def _block(self, message: str) -> None:
+        task_key = self.active_task.task_key if self.active_task else None
+        action_name = None
+        if self.active_task and self.active_task.action_index < len(self.active_task.task.actions):
+            action_name = self.active_task.task.actions[self.active_task.action_index].name
+        self.failure_event = FailureEvent(message, task_key, action_name, 0)
+        self.recovery_action = decide_recovery(self.recovery_strategy, self.failure_event).action
         self.error_message = message
         if self.active_task:
             for robot in self.active_task.robots:

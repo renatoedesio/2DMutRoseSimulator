@@ -1,0 +1,134 @@
+{
+  "encoding": {
+    "room_order": ["RoomA", "RoomB", "RoomC"],
+    "attribute_order": ["is_clean", "is_prepared", "door_open"],
+    "false": "F",
+    "true": "V"
+  },
+  "scenarios": [
+    {
+      "id": "AFFF_BFFV_CVVV",
+      "world_db": "scenarios/AFFF_BFFV_CVVV/World_db.xml",
+      "description": "Estado inicial do exemplo Room Preparation: as salas A e B requerem preparacao; a porta da sala A esta fechada.",
+      "rooms": {
+        "RoomA": {
+          "location": "c3",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": false
+        },
+        "RoomB": {
+          "location": "c6",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": true
+        },
+        "RoomC": {
+          "location": "c8",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        },
+        "SanitizationRoom": {
+          "location": "c10",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        }
+      }
+    },
+    {
+      "id": "AFFV_BVVV_CFFF",
+      "world_db": "scenarios/AFFV_BVVV_CFFF/World_db.xml",
+      "description": "A sala A requer limpeza e preparacao com a porta aberta; a C requer limpeza e preparacao com a porta fechada; B ja esta pronta.",
+      "rooms": {
+        "RoomA": {
+          "location": "c3",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": true
+        },
+        "RoomB": {
+          "location": "c6",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        },
+        "RoomC": {
+          "location": "c8",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": false
+        },
+        "SanitizationRoom": {
+          "location": "c10",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        }
+      }
+    },
+    {
+      "id": "AVFV_BFVF_CVVV",
+      "world_db": "scenarios/AVFV_BFVF_CVVV/World_db.xml",
+      "description": "A sala A esta limpa mas ainda exige preparacao; B ja esta preparada; C ja esta pronta. Testa um plano sem limpeza para a unica sala pendente.",
+      "rooms": {
+        "RoomA": {
+          "location": "c3",
+          "is_clean": true,
+          "is_prepared": false,
+          "door_open": true
+        },
+        "RoomB": {
+          "location": "c6",
+          "is_clean": false,
+          "is_prepared": true,
+          "door_open": false
+        },
+        "RoomC": {
+          "location": "c8",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        },
+        "SanitizationRoom": {
+          "location": "c10",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        }
+      }
+    },
+    {
+      "id": "AFFV_BFFV_CFFV",
+      "world_db": "scenarios/AFFV_BFFV_CFFV/World_db.xml",
+      "description": "As tres salas requerem limpeza e preparacao, com todas as portas abertas. Testa uma decomposicao maior sem a acao de abrir portas.",
+      "rooms": {
+        "RoomA": {
+          "location": "c3",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": true
+        },
+        "RoomB": {
+          "location": "c6",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": true
+        },
+        "RoomC": {
+          "location": "c8",
+          "is_clean": false,
+          "is_prepared": false,
+          "door_open": true
+        },
+        "SanitizationRoom": {
+          "location": "c10",
+          "is_clean": true,
+          "is_prepared": true,
+          "door_open": true
+        }
+      }
+    }
+  ]
+}
