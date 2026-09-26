@@ -16,6 +16,7 @@ class Simulator:
 
     FPS = 60
     WINDOW_SIZE = (1280, 800)
+    WORLD_PANEL_WIDTH = 280
     SIMULATION_SPEEDS = (0.25, 0.5, 1.0, 2.0, 4.0)
 
     def __init__(self, scenario: Scenario) -> None:
@@ -26,7 +27,9 @@ class Simulator:
 
         project_directory = Path(__file__).resolve().parent.parent
         self.environment = Environment(project_directory / "assets" / scenario.asset_folder, self.WINDOW_SIZE, scenario)
-        self.screen = pygame.display.set_mode(self.environment.size)
+        self.screen = pygame.display.set_mode(
+            (self.environment.size[0] + self.WORLD_PANEL_WIDTH, self.environment.size[1])
+        )
         self.control_icons = self._load_control_icons(project_directory / "assets" / "global")
         self.robots = [Robot(definition) for definition in scenario.robots]
         self.navigations = [NavigationController(robot, self.environment) for robot in self.robots]
@@ -67,16 +70,20 @@ class Simulator:
                 self._change_simulation_speed(-1)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 self._change_simulation_speed(1)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self._is_map_position(event.pos):
                 self.selected_navigation.set_target_point(event.pos)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2 and self._is_map_position(event.pos):
                 self._erase_injected_obstacle(event.pos)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and self._is_map_position(event.pos):
                 self._inject_obstacle(event.pos)
-            elif event.type == pygame.MOUSEMOTION and event.buttons[1]:
+            elif event.type == pygame.MOUSEMOTION and event.buttons[1] and self._is_map_position(event.pos):
                 self._erase_injected_obstacle(event.pos)
-            elif event.type == pygame.MOUSEMOTION and event.buttons[2]:
+            elif event.type == pygame.MOUSEMOTION and event.buttons[2] and self._is_map_position(event.pos):
                 self._inject_obstacle(event.pos)
+
+    def _is_map_position(self, position: tuple[int, int]) -> bool:
+        """Impede que cliques no painel lateral interajam com o mapa."""
+        return 0 <= position[0] < self.environment.size[0] and 0 <= position[1] < self.environment.size[1]
 
     def _inject_obstacle(self, position: tuple[int, int]) -> None:
         self.environment.add_injected_obstacle(position)
@@ -167,7 +174,9 @@ class Simulator:
         print(f"{navigation.context.robot.label} indo para {location.name}.")
 
     def _render(self) -> None:
+        self.screen.fill((245, 247, 250))
         self.environment.draw(self.screen)
+        self._draw_world_panel_background()
         self._draw_doors()
         for robot, navigation in zip(self.robots, self.navigations):
             target = navigation.target
@@ -178,9 +187,15 @@ class Simulator:
         self._draw_location_label()
         self._draw_navigation_error()
         self._draw_mission_status()
-        self._draw_room_status()
-        self._draw_controls_hint()
+        room_panel = self._draw_room_status()
+        self._draw_controls_hint(room_panel.bottom + 12 if room_panel else 58)
         pygame.display.flip()
+
+    def _draw_world_panel_background(self) -> None:
+        """Delimita a área lateral reservada aos estados da missão."""
+        panel = pygame.Rect(self.environment.size[0], 0, self.WORLD_PANEL_WIDTH, self.screen.get_height())
+        pygame.draw.rect(self.screen, (245, 247, 250), panel)
+        pygame.draw.line(self.screen, (120, 140, 150), panel.topleft, panel.bottomleft, 2)
 
     def _draw_doors(self) -> None:
         """Desenha portas verdes (abertas) ou vermelhas (fechadas) no mapa."""
@@ -231,13 +246,13 @@ class Simulator:
         pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
         self.screen.blit(label, (background.x + 8, background.y + 6))
 
-    def _draw_room_status(self) -> None:
+    def _draw_room_status(self) -> pygame.Rect | None:
         """Mostra o estado lógico atual de cada sala do domínio ativo."""
         if self.mission_dispatcher is None:
-            return
+            return None
         room_statuses = getattr(self.mission_dispatcher.domain, "room_statuses", None)
         if not callable(room_statuses):
-            return
+            return None
 
         text_color = (20, 35, 45)
         positive_color = (39, 174, 96)
@@ -261,7 +276,7 @@ class Simulator:
             fragments[-1] = (fragments[-1][0], 8)
 
         if not fragments:
-            return
+            return None
         width = max(fragment.get_width() for fragment, _ in fragments)
         height = sum(fragment.get_height() + bottom_spacing for fragment, bottom_spacing in fragments)
         background = pygame.Rect(0, 0, width + 16, height + 12)
@@ -272,35 +287,36 @@ class Simulator:
         for fragment, bottom_spacing in fragments:
             self.screen.blit(fragment, (background.x + 8, y_position))
             y_position += fragment.get_height() + bottom_spacing
+        return background
 
-    def _draw_controls_hint(self) -> None:
+    def _draw_controls_hint(self, top: int) -> None:
+        """Mostra os atalhos em um painel compacto abaixo do estado do mundo."""
         text_color = (20, 35, 45)
-        fragments: list[pygame.Surface] = [
-            self.font.render(f"R: Resetar | Velocidade: {self.simulation_speed:g}x ", True, text_color),
-            self.control_icons["left"],
-            self.control_icons["right"],
-            self.font.render(" | Trocar robô: ", True, text_color),
-            self.control_icons["up"],
-            self.control_icons["down"],
-            self.font.render(" | Destino: ", True, text_color),
-            self.control_icons["left_click"],
-            self.font.render(" | Injetar bloqueio: ", True, text_color),
-            self.control_icons["right_click"],
-            self.font.render(" | Remover: ", True, text_color),
-            self.control_icons["midle_click"],
+        rows: list[list[pygame.Surface]] = [
+            [self.font.render("Atalhos", True, text_color)],
+            [self.font.render("R: Resetar", True, text_color)],
+            [self.font.render(f"Velocidade: {self.simulation_speed:g}x", True, text_color), self.control_icons["left"], self.control_icons["right"]],
+            [self.font.render("Trocar robô:", True, text_color), self.control_icons["up"], self.control_icons["down"]],
+            [self.font.render("Destino:", True, text_color), self.control_icons["left_click"]],
+            [self.font.render("Injetar bloqueio:", True, text_color), self.control_icons["right_click"]],
+            [self.font.render("Remover:", True, text_color), self.control_icons["midle_click"]],
         ]
-        spacing = 4
-        hint = pygame.Surface(
-            (sum(fragment.get_width() for fragment in fragments) + spacing * (len(fragments) - 1), 24),
-            pygame.SRCALPHA,
+        horizontal_spacing = 4
+        vertical_spacing = 3
+        width = max(
+            sum(fragment.get_width() for fragment in row) + horizontal_spacing * (len(row) - 1)
+            for row in rows
         )
-        x_position = 0
-        for fragment in fragments:
-            hint.blit(fragment, (x_position, (hint.get_height() - fragment.get_height()) // 2))
-            x_position += fragment.get_width() + spacing
-        background = hint.get_rect(
-            bottomright=(self.screen.get_width() - 12, self.screen.get_height() - 12)
-        ).inflate(16, 12)
+        row_heights = [max(fragment.get_height() for fragment in row) for row in rows]
+        height = sum(row_heights) + vertical_spacing * (len(rows) - 1)
+        background = pygame.Rect(0, top, width + 16, height + 12)
+        background.right = self.screen.get_width() - 12
         pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
         pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
-        self.screen.blit(hint, (background.x + 8, background.y + 6))
+        y_position = background.y + 6
+        for row, row_height in zip(rows, row_heights):
+            x_position = background.x + 8
+            for fragment in row:
+                self.screen.blit(fragment, (x_position, y_position + (row_height - fragment.get_height()) // 2))
+                x_position += fragment.get_width() + horizontal_spacing
+            y_position += row_height + vertical_spacing
