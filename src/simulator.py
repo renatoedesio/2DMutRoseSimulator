@@ -28,8 +28,6 @@ class Simulator:
         self.environment = Environment(project_directory / "assets" / scenario.asset_folder, self.WINDOW_SIZE, scenario)
         self.screen = pygame.display.set_mode(self.environment.size)
         self.control_icons = self._load_control_icons(project_directory / "assets" / "global")
-        battery_image = pygame.image.load(project_directory / "assets" / "global" / "battery.png").convert_alpha()
-        self.battery_icon = pygame.transform.smoothscale(battery_image, (22, 22))
         self.robots = [Robot(definition) for definition in scenario.robots]
         self.navigations = [NavigationController(robot, self.environment) for robot in self.robots]
         self.selected_robot_index = 0
@@ -86,11 +84,14 @@ class Simulator:
 
     @staticmethod
     def _load_control_icons(asset_directory: Path) -> dict[str, pygame.Surface]:
-        """Carrega as setas do painel e as ajusta à altura do texto."""
+        """Carrega os ícones do painel e os ajusta à altura do texto."""
         icons: dict[str, pygame.Surface] = {}
         for direction in ("up", "down", "left", "right"):
             image = pygame.image.load(asset_directory / f"arrow_{direction}.png").convert_alpha()
             icons[direction] = pygame.transform.smoothscale(image, (22, 22))
+        for click in ("left", "right", "midle"):
+            image = pygame.image.load(asset_directory / f"{click}_click.png").convert_alpha()
+            icons[f"{click}_click"] = pygame.transform.smoothscale(image, (22, 22))
         return icons
 
     def set_mission_dispatcher(self, dispatcher) -> None:
@@ -170,28 +171,14 @@ class Simulator:
         location = self.environment.get_location(self.selected_robot.position)
         name = location.name if location else "Área não identificada"
         text_color = (20, 35, 45)
-        fragments = [
-            self.font.render(
-                f"{self.selected_robot.label} {self.selected_robot.role} | {self.selected_robot.state.value} ",
-                True,
-                text_color,
+        label = self.font.render(
+            (
+                f"{self.selected_robot.label} {self.selected_robot.role} | "
+                f"{self.selected_robot.state.value} | {self.selected_robot.current_task} | {name}"
             ),
-            self.battery_icon,
-            self.font.render(
-                f" {self.selected_robot.battery:.0f}% | {self.selected_robot.current_task} | {name}",
-                True,
-                text_color,
-            ),
-        ]
-        spacing = 3
-        label = pygame.Surface(
-            (sum(fragment.get_width() for fragment in fragments) + spacing * (len(fragments) - 1), 24),
-            pygame.SRCALPHA,
+            True,
+            text_color,
         )
-        x_position = 0
-        for fragment in fragments:
-            label.blit(fragment, (x_position, (label.get_height() - fragment.get_height()) // 2))
-            x_position += fragment.get_width() + spacing
         background = label.get_rect(topleft=(12, 12)).inflate(16, 12)
         pygame.draw.rect(self.screen, (255, 255, 255), background, border_radius=5)
         pygame.draw.rect(self.screen, (120, 140, 150), background, 1, border_radius=5)
@@ -224,7 +211,12 @@ class Simulator:
             self.font.render(" | Trocar robô: ", True, text_color),
             self.control_icons["up"],
             self.control_icons["down"],
-            self.font.render(" | Botão direito: injetar | Botão meio: apagar", True, text_color),
+            self.font.render(" | Destino: ", True, text_color),
+            self.control_icons["left_click"],
+            self.font.render(" | Injetar bloqueio: ", True, text_color),
+            self.control_icons["right_click"],
+            self.font.render(" | Remover: ", True, text_color),
+            self.control_icons["midle_click"],
         ]
         spacing = 4
         hint = pygame.Surface(
