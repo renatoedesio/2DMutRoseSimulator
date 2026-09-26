@@ -110,6 +110,7 @@ class AgentMissionDispatcher:
                 return
             robot.state = RobotState.ACTING
             robot.current_task = action.name
+            robot.action_progress = 0.0
         self.active_task.remaining_seconds = spec.duration_seconds
 
     def _update_action(self, delta_time: float) -> None:
@@ -119,6 +120,7 @@ class AgentMissionDispatcher:
         self.active_task.remaining_seconds -= delta_time
         for robot in self.active_task.robots:
             robot.consume_battery(spec.battery_cost * delta_time / spec.duration_seconds)
+            robot.action_progress = max(0.0, min(1.0, 1 - self.active_task.remaining_seconds / spec.duration_seconds))
         if self.active_task.remaining_seconds > 0:
             return
 
@@ -135,6 +137,7 @@ class AgentMissionDispatcher:
         for robot in self.active_task.robots:
             robot.state = RobotState.IDLE
             robot.current_task = "Sem tarefa"
+            robot.action_progress = 0.0
         self.next_task_index += 1
         self.active_task = None
 

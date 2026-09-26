@@ -30,6 +30,7 @@ class Robot:
         self.battery = definition.battery_capacity
         self.state = RobotState.IDLE
         self.current_task = "Sem tarefa"
+        self.action_progress = 0.0
 
     def move_towards(
         self, target: pygame.Vector2, delta_time: float, environment: Environment
@@ -68,6 +69,13 @@ class Robot:
             battery_fill = battery_box.copy()
             battery_fill.width = round(battery_box.width * battery_level)
             pygame.draw.rect(screen, (46, 204, 113), battery_fill, border_radius=2)
+        if self.state == RobotState.ACTING:
+            progress_box = pygame.Rect(label_box.left, battery_box.bottom + 2, label_box.width, 5)
+            pygame.draw.rect(screen, (80, 90, 95), progress_box, border_radius=2)
+            if self.action_progress > 0:
+                progress_fill = progress_box.copy()
+                progress_fill.width = round(progress_box.width * self.action_progress)
+                pygame.draw.rect(screen, (231, 76, 60), progress_fill, border_radius=2)
 
     @staticmethod
     def _blit_centered(screen: pygame.Surface, image: pygame.Surface, center: tuple[int, int]) -> None:
