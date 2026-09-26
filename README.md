@@ -36,7 +36,7 @@ python -m pip install -r requirements.txt
 
 ## Execução
 
-Os comandos ficam organizados em `scripts/`: `scripts/manual/` contém os cenários para exploração manual e `scripts/tools/` reúne validação, execução especializada e manutenção. O comando principal é `python -m scripts`.
+Os comandos ficam organizados em `scripts/`: `scripts/manual/` contém os cenários para exploração manual e `scripts/tools/` reúne validação, execução especializada e manutenção. O comando principal é `python -m scripts`. O motor reutilizável fica em `src/core/`, os domínios em `src/domains/` e os dados de cada experimento em `experiments/`.
 
 ### Modo manual
 
@@ -100,7 +100,7 @@ O núcleo apenas ordena tarefas e ações. A especialização Hospital avalia pr
 
 ## Execução visual de uma missão
 
-As missões ficam agrupadas em pacotes autocontidos em `missions/<família>/<cenário>/`. Cada pacote contém `task_output.json`, `World_db.xml` e `manifest.json`, evitando que uma decomposição seja usada com o mundo errado.
+As missões ficam agrupadas em pacotes autocontidos em `experiments/<experimento>/<domínio>/<cenário>/`. Cada pacote contém `task_output.json`, `World_db.xml` e `manifest.json`, evitando que uma decomposição seja usada com o mundo errado.
 
 Para listar o catálogo:
 
@@ -120,10 +120,10 @@ Cada robô exibe seu identificador, estado e bateria. Os estados são `IDLE`, `M
 
 ## Imagens do ambiente
 
-Cada cenário tem sua própria pasta em `assets/`:
+Cada domínio tem sua própria pasta de imagens em `src/domains/`:
 
-- `assets/hospital/`: arquivos do cenário Hospital.
-- `assets/farm/`: arquivos do cenário Fazenda.
+- `src/domains/hospital/assets/`: arquivos do cenário Hospital.
+- `src/domains/farm/assets/`: arquivos do cenário Fazenda.
 
 Na primeira execução de um cenário, são criados `map.png` e `collision.png` nessa pasta. A máscara `collision.png` é única: preto bloqueia o robô; branco é área livre sem nome; azul, roxo e verde identificam os locais catalogados naquele cenário.
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pygame
 
-from src.location import Location
+from src.core.location import Location
 from src.scenarios import Scenario
 
 

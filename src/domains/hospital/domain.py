@@ -2,9 +2,9 @@
 
 from dataclasses import dataclass
 
-from src.mission.models import MissionTask
-from src.mission.executor import ActionSpec
-from src.mission.world_knowledge_reader import WorldKnowledge
+from src.core.mission.models import MissionTask
+from src.core.mission.executor import ActionSpec
+from src.core.mission.world_knowledge_reader import WorldKnowledge
 
 
 @dataclass

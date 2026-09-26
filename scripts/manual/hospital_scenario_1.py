@@ -1,7 +1,7 @@
 """Inicia o cenário 1 do Hospital."""
 
 from src.scenarios import HOSPITAL_SCENARIO_1
-from src.simulator import Simulator
+from src.core.simulator import Simulator
 
 
 if __name__ == "__main__":

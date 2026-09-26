@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pygame
 
-from src.environment import Environment
+from src.core.environment import Environment
 from src.scenarios import HOSPITAL_SCENARIO_1
-from src.simulator import Simulator
+from src.core.simulator import Simulator
 
 
 def main() -> None:
@@ -14,7 +14,7 @@ def main() -> None:
     pygame.display.set_mode((1, 1), flags=pygame.HIDDEN)
     project_directory = Path(__file__).resolve().parent.parent.parent
     environment = Environment(
-        project_directory / "assets" / HOSPITAL_SCENARIO_1.asset_folder,
+        project_directory / "src" / "domains" / HOSPITAL_SCENARIO_1.asset_folder / "assets",
         Simulator.WINDOW_SIZE,
         HOSPITAL_SCENARIO_1,
     )

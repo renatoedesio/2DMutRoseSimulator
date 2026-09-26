@@ -1,7 +1,7 @@
 """Resolve tokens externos da missão para entidades de um cenário."""
 
-from src.mission.models import BoundMission, BoundTask, Mission, MissionTask, ValidationIssue
-from src.mission.world_knowledge_reader import WorldKnowledge
+from src.core.mission.models import BoundMission, BoundTask, Mission, MissionTask, ValidationIssue
+from src.core.mission.world_knowledge_reader import WorldKnowledge
 from src.scenarios import Scenario
 
 

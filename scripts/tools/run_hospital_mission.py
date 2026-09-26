@@ -3,12 +3,12 @@
 import argparse
 
 from src.domains.hospital.domain import HospitalMissionDomain
-from src.mission.agent_dispatcher import AgentMissionDispatcher
-from src.mission.decomposition_reader import DecompositionReader
-from src.mission.scenario_binder import ScenarioBinder
-from src.mission.world_knowledge_reader import WorldKnowledgeReader
+from src.core.mission.agent_dispatcher import AgentMissionDispatcher
+from src.core.mission.decomposition_reader import DecompositionReader
+from src.core.mission.scenario_binder import ScenarioBinder
+from src.core.mission.world_knowledge_reader import WorldKnowledgeReader
 from src.scenarios import HOSPITAL_SCENARIO_1, HOSPITAL_SCENARIO_2
-from src.simulator import Simulator
+from src.core.simulator import Simulator
 
 
 SCENARIOS = {"hospital-1": HOSPITAL_SCENARIO_1, "hospital-2": HOSPITAL_SCENARIO_2}

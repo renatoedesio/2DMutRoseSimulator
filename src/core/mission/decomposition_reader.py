@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from src.mission.models import (
+from src.core.mission.models import (
     ActionDefinition,
     ActionStep,
     Mission,

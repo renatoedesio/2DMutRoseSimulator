@@ -4,10 +4,10 @@ from dataclasses import dataclass
 
 import pygame
 
-from src.location import Location
-from src.mission.executor import TimedMissionDomain
-from src.mission.models import BoundMission, MissionTask
-from src.robot import Robot, RobotState
+from src.core.location import Location
+from src.core.mission.executor import TimedMissionDomain
+from src.core.mission.models import BoundMission, MissionTask
+from src.core.robot import Robot, RobotState
 
 
 @dataclass

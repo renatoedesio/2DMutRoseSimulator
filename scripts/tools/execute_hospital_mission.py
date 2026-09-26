@@ -3,10 +3,10 @@
 import argparse
 
 from src.domains.hospital.domain import HospitalMissionDomain
-from src.mission.decomposition_reader import DecompositionReader
-from src.mission.executor import MissionExecutor
-from src.mission.scenario_binder import ScenarioBinder
-from src.mission.world_knowledge_reader import WorldKnowledgeReader
+from src.core.mission.decomposition_reader import DecompositionReader
+from src.core.mission.executor import MissionExecutor
+from src.core.mission.scenario_binder import ScenarioBinder
+from src.core.mission.world_knowledge_reader import WorldKnowledgeReader
 from src.scenarios import HOSPITAL_SCENARIO_1, HOSPITAL_SCENARIO_2
 
 

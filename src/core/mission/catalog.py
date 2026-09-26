@@ -16,13 +16,31 @@ class MissionBundle:
 
 
 class MissionCatalog:
-    """Encontra pacotes de missão em missions/<família>/<cenário>."""
+    """Encontra pacotes em experiments/<experimento>/<domínio>/<cenário>."""
 
     def __init__(self, missions_directory: Path) -> None:
         self.missions_directory = missions_directory
 
     def load(self, family: str, scenario_name: str) -> MissionBundle:
-        bundle_directory = self.missions_directory / family / scenario_name
+        family_directory = next(
+            (
+                item
+                for item in self.missions_directory.iterdir()
+                if item.name.replace("_", "").replace("-", "").casefold()
+                == family.replace("_", "").replace("-", "").casefold()
+            ),
+            self.missions_directory / family,
+        )
+        if not family_directory.exists():
+            raise FileNotFoundError(f"Experimento não encontrado: {family}")
+        bundle_directory = next(
+            (
+                item / scenario_name
+                for item in family_directory.iterdir()
+                if item.is_dir() and (item / scenario_name / "manifest.json").exists()
+            ),
+            family_directory / scenario_name,
+        )
         manifest_path = bundle_directory / "manifest.json"
         if not manifest_path.exists():
             raise FileNotFoundError(f"Cenário não encontrado: {family}/{scenario_name}")
@@ -44,9 +62,12 @@ class MissionCatalog:
         for family_directory in self.missions_directory.iterdir():
             if not family_directory.is_dir():
                 continue
-            for scenario_directory in family_directory.iterdir():
-                if scenario_directory.is_dir() and (scenario_directory / "manifest.json").exists():
-                    bundles.append(self.load(family_directory.name, scenario_directory.name))
+            for domain_directory in family_directory.iterdir():
+                if not domain_directory.is_dir():
+                    continue
+                for scenario_directory in domain_directory.iterdir():
+                    if scenario_directory.is_dir() and (scenario_directory / "manifest.json").exists():
+                        bundles.append(self.load(family_directory.name, scenario_directory.name))
         return sorted(bundles, key=lambda item: (item.family, item.scenario_name))
 
     @staticmethod

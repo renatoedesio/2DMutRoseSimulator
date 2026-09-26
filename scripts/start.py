@@ -4,13 +4,13 @@ import argparse
 from pathlib import Path
 
 from src.domains.hospital.domain import HospitalMissionDomain
-from src.mission.agent_dispatcher import AgentMissionDispatcher
-from src.mission.catalog import MissionCatalog
-from src.mission.decomposition_reader import DecompositionReader
-from src.mission.scenario_binder import ScenarioBinder
-from src.mission.world_knowledge_reader import WorldKnowledgeReader
+from src.core.mission.agent_dispatcher import AgentMissionDispatcher
+from src.core.mission.catalog import MissionCatalog
+from src.core.mission.decomposition_reader import DecompositionReader
+from src.core.mission.scenario_binder import ScenarioBinder
+from src.core.mission.world_knowledge_reader import WorldKnowledgeReader
 from src.scenarios import HOSPITAL_SCENARIO_1, HOSPITAL_SCENARIO_2
-from src.simulator import Simulator
+from src.core.simulator import Simulator
 
 
 SIMULATOR_SCENARIOS = {
@@ -22,7 +22,7 @@ SIMULATOR_SCENARIOS = {
 def load_bundle_for_execution(family: str, scenario_name: str):
     """Carrega e valida um pacote, sem iniciar a janela do simulador."""
     project_directory = Path(__file__).resolve().parent.parent
-    bundle = MissionCatalog(project_directory / "missions").load(family, scenario_name)
+    bundle = MissionCatalog(project_directory / "experiments").load(family, scenario_name)
     if bundle.domain != "hospital":
         raise ValueError(f"Domínio ainda não suportado pelo iniciador: {bundle.domain}")
     simulator_scenario = SIMULATOR_SCENARIOS[bundle.simulator_scenario]
@@ -40,7 +40,7 @@ def main() -> None:
     parser.add_argument("--validate", action="store_true", help="Valida sem abrir o simulador")
     arguments = parser.parse_args()
 
-    catalog = MissionCatalog(Path(__file__).resolve().parent.parent / "missions")
+    catalog = MissionCatalog(Path(__file__).resolve().parent.parent / "experiments")
     if arguments.list:
         for bundle in catalog.list():
             print(f"{bundle.family} {bundle.scenario_name} -> {bundle.simulator_scenario}")

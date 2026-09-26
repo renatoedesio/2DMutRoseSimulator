@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from src.mission.models import BoundMission, MissionTask
+from src.core.mission.models import BoundMission, MissionTask
 
 
 class MissionDomain(Protocol):

@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 import pygame
 import py_trees
 
-from src.environment import Environment
-from src.location import Location
-from src.robot import Robot
+from src.core.environment import Environment
+from src.core.location import Location
+from src.core.robot import Robot
 
 
 @dataclass

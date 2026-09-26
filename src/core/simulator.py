@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pygame
 
-from src.behavior_tree import NavigationController
-from src.command_console import CommandConsole
-from src.environment import Environment
-from src.robot import Robot
+from src.core.behavior_tree import NavigationController
+from src.core.command_console import CommandConsole
+from src.core.environment import Environment
+from src.core.robot import Robot
 from src.scenarios import Scenario
 
 
@@ -25,8 +25,12 @@ class Simulator:
         self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
         self.clock = pygame.time.Clock()
 
-        project_directory = Path(__file__).resolve().parent.parent
-        self.environment = Environment(project_directory / "assets" / scenario.asset_folder, self.WINDOW_SIZE, scenario)
+        project_directory = Path(__file__).resolve().parent.parent.parent
+        self.environment = Environment(
+            project_directory / "src" / "domains" / scenario.asset_folder / "assets",
+            self.WINDOW_SIZE,
+            scenario,
+        )
         self.screen = pygame.display.set_mode(
             (self.environment.size[0] + self.WORLD_PANEL_WIDTH, self.environment.size[1])
         )

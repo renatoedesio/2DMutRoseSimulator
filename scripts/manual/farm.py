@@ -1,7 +1,7 @@
 """Inicia o cenário Fazenda."""
 
 from src.scenarios import FARM
-from src.simulator import Simulator
+from src.core.simulator import Simulator
 
 
 if __name__ == "__main__":

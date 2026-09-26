@@ -4,7 +4,7 @@ from enum import Enum
 
 import pygame
 
-from src.environment import Environment
+from src.core.environment import Environment
 from src.scenarios import RobotDefinition
 
 
