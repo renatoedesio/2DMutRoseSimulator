@@ -57,6 +57,8 @@ class Simulator:
                 self.running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                self._reset()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
                 self._select_robot(-1)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
@@ -81,6 +83,17 @@ class Simulator:
 
     def _erase_injected_obstacle(self, position: tuple[int, int]) -> None:
         self.environment.remove_injected_obstacle(position)
+
+    def _reset(self) -> None:
+        """Restaura robôs, rotas, bloqueios e missão ao estado inicial."""
+        self.environment.clear_injected_obstacles()
+        for robot, navigation in zip(self.robots, self.navigations):
+            robot.reset()
+            navigation.reset()
+        self.selected_robot_index = 0
+        self.simulation_speed_index = self.SIMULATION_SPEEDS.index(1.0)
+        if self.mission_dispatcher is not None:
+            self.mission_dispatcher.reset()
 
     @staticmethod
     def _load_control_icons(asset_directory: Path) -> dict[str, pygame.Surface]:
@@ -155,6 +168,7 @@ class Simulator:
 
     def _render(self) -> None:
         self.environment.draw(self.screen)
+        self._draw_doors()
         for robot, navigation in zip(self.robots, self.navigations):
             target = navigation.target
             target_point = pygame.Vector2(target.center) if target else None
@@ -166,6 +180,20 @@ class Simulator:
         self._draw_mission_status()
         self._draw_controls_hint()
         pygame.display.flip()
+
+    def _draw_doors(self) -> None:
+        """Desenha portas verdes (abertas) ou vermelhas (fechadas) no mapa."""
+        if self.mission_dispatcher is None:
+            return
+        is_door_open = getattr(self.mission_dispatcher.domain, "is_door_open", None)
+        if not callable(is_door_open):
+            return
+        for room_name, position in self.environment.scenario.door_positions.items():
+            color = (46, 204, 113) if is_door_open(room_name) else (231, 76, 60)
+            door = pygame.Rect(0, 0, 42, 14)
+            door.center = position
+            pygame.draw.rect(self.screen, color, door, border_radius=3)
+            pygame.draw.rect(self.screen, (52, 73, 94), door, 2, border_radius=3)
 
     def _draw_location_label(self) -> None:
         location = self.environment.get_location(self.selected_robot.position)
@@ -205,7 +233,7 @@ class Simulator:
     def _draw_controls_hint(self) -> None:
         text_color = (20, 35, 45)
         fragments: list[pygame.Surface] = [
-            self.font.render(f"Velocidade: {self.simulation_speed:g}x ", True, text_color),
+            self.font.render(f"R: Resetar | Velocidade: {self.simulation_speed:g}x ", True, text_color),
             self.control_icons["left"],
             self.control_icons["right"],
             self.font.render(" | Trocar robô: ", True, text_color),

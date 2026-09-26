@@ -18,11 +18,21 @@ class HospitalMissionDomain:
     """Executa somente as regras que pertencem ao Hospital."""
 
     def __init__(self, world_knowledge: WorldKnowledge) -> None:
-        self.rooms = {
+        self._initial_rooms = {
             name: HospitalRoomState(room.is_clean, room.is_prepared, room.door_open)
             for name, room in world_knowledge.rooms.items()
         }
+        self.rooms: dict[str, HospitalRoomState] = {}
         self.robot_sanitized: dict[str, bool] = {}
+        self.reset()
+
+    def reset(self) -> None:
+        """Restaura as condições iniciais das salas e dos robôs."""
+        self.rooms = {
+            name: HospitalRoomState(room.is_clean, room.is_prepared, room.door_open)
+            for name, room in self._initial_rooms.items()
+        }
+        self.robot_sanitized.clear()
 
     def validate_task(self, task: MissionTask, robot_labels: tuple[str, ...]) -> list[str]:
         errors = []
@@ -69,6 +79,11 @@ class HospitalMissionDomain:
             f"{name}: clean={state.is_clean}, prepared={state.is_prepared}, door_open={state.door_open}"
             for name, state in self.rooms.items()
         ]
+
+    def is_door_open(self, room_name: str) -> bool:
+        """Informa se a porta da sala está aberta para a visualização."""
+        room = self.rooms.get(room_name)
+        return room.door_open if room is not None else False
 
     def _evaluate_predicate(self, predicate: str, robot_labels: tuple[str, ...]) -> bool:
         negated = predicate.startswith("not ")

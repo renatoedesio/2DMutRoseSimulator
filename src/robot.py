@@ -23,11 +23,20 @@ class Robot:
         self.label = definition.label
         self.role = definition.role
         self.position = pygame.Vector2(definition.start_position)
+        self.start_position = pygame.Vector2(definition.start_position)
         self.radius = 16
         self.speed = 220.0
         self.color = definition.color
         self.battery_capacity = definition.battery_capacity
         self.battery = definition.battery_capacity
+        self.state = RobotState.IDLE
+        self.current_task = "Sem tarefa"
+        self.action_progress = 0.0
+
+    def reset(self) -> None:
+        """Restaura o robô ao estado inicial do cenário."""
+        self.position = self.start_position.copy()
+        self.battery = self.battery_capacity
         self.state = RobotState.IDLE
         self.current_task = "Sem tarefa"
         self.action_progress = 0.0

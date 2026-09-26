@@ -1,6 +1,6 @@
 """Catálogo de cenários disponíveis no simulador."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,8 @@ class Scenario:
     robots: tuple[RobotDefinition, ...]
     location_aliases: dict[str, str]
     role_aliases: dict[str, tuple[str, ...]]
+    door_approaches: dict[str, tuple[int, int]] = field(default_factory=dict)
+    door_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
 
 
 HOSPITAL_SCENARIO_1 = Scenario(
@@ -46,10 +48,10 @@ HOSPITAL_SCENARIO_1 = Scenario(
     wall_color=(52, 73, 94),
     accent_color=(190, 210, 220),
     robots=(
-        RobotDefinition("A-1", "Limpador", (120, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("A-2", "Limpador", (260, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("B-1", "Organizador", (120, 220), (155, 89, 182), frozenset({"moveobject"})),
-        RobotDefinition("B-2", "Organizador", (260, 220), (155, 89, 182), frozenset({"moveobject"})),
+        RobotDefinition("A-1", "Limpador", (70, 393), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("A-2", "Limpador", (115, 393), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("B-1", "Organizador", (160, 393), (155, 89, 182), frozenset({"moveobject"})),
+        RobotDefinition("B-2", "Organizador", (205, 393), (155, 89, 182), frozenset({"moveobject"})),
     ),
     location_aliases={
         "RoomA": "RoomA",
@@ -58,6 +60,18 @@ HOSPITAL_SCENARIO_1 = Scenario(
         "SanitizationRoom": "SanitizationRoom",
     },
     role_aliases={"CleanerRobot": ("Limpador",), "robotteam": ("Organizador",)},
+    door_approaches={
+        "RoomA": (320, 393),
+        "RoomB": (960, 393),
+        "RoomC": (320, 393),
+        "SanitizationRoom": (960, 393),
+    },
+    door_positions={
+        "RoomA": (320, 340),
+        "RoomB": (960, 340),
+        "RoomC": (320, 460),
+        "SanitizationRoom": (960, 460),
+    },
 )
 
 HOSPITAL_SCENARIO_2 = Scenario(
@@ -69,12 +83,14 @@ HOSPITAL_SCENARIO_2 = Scenario(
     wall_color=(52, 73, 94),
     accent_color=(190, 210, 220),
     robots=(
-        RobotDefinition("A-1", "Limpador", (120, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("A-2", "Limpador", (260, 120), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
-        RobotDefinition("B-1", "Organizador", (120, 220), (155, 89, 182), frozenset({"moveobject"})),
+        RobotDefinition("A-1", "Limpador", (70, 393), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("A-2", "Limpador", (115, 393), (52, 152, 219), frozenset({"cleaning", "door-opening", "sanitize"})),
+        RobotDefinition("B-1", "Organizador", (160, 393), (155, 89, 182), frozenset({"moveobject"})),
     ),
     location_aliases=HOSPITAL_SCENARIO_1.location_aliases,
     role_aliases=HOSPITAL_SCENARIO_1.role_aliases,
+    door_approaches=HOSPITAL_SCENARIO_1.door_approaches,
+    door_positions=HOSPITAL_SCENARIO_1.door_positions,
 )
 
 FARM = Scenario(

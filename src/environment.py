@@ -235,6 +235,11 @@ class Environment:
         self._refresh_injected_obstacles()
         return True
 
+    def clear_injected_obstacles(self) -> None:
+        """Remove todos os bloqueios temporários criados durante a simulação."""
+        self.injected_obstacles.clear()
+        self._refresh_injected_obstacles()
+
     def _refresh_injected_obstacles(self) -> None:
         """Reconstrói a colisão dinâmica sem modificar a máscara original."""
         self.collision_mask = self._base_collision_mask.copy()
@@ -407,3 +412,7 @@ class Environment:
         """Localiza uma sala ou corredor ignorando maiúsculas e minúsculas."""
         normalized_name = name.strip().casefold()
         return next((location for location in self.locations if location.name.casefold() == normalized_name), None)
+
+    def get_door_approach(self, location_name: str) -> tuple[int, int] | None:
+        """Retorna o ponto no corredor em frente à porta do local informado."""
+        return self.scenario.door_approaches.get(location_name)

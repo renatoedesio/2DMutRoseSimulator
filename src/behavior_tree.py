@@ -175,6 +175,14 @@ class NavigationController:
         """Cria um destino lógico temporário para um clique no mapa."""
         self.set_target(Location("Destino selecionado", (0, 0, 0), point))
 
+    def reset(self) -> None:
+        """Cancela a rota e limpa qualquer erro de navegação."""
+        self.blackboard.target_location = None
+        self.blackboard.contract_status = "IDLE"
+        self.context.waypoints.clear()
+        self.context.error_message = None
+        self.tree.root.stop(py_trees.common.Status.INVALID)
+
     def tick(self, delta_time: float) -> None:
         self.context.delta_time = delta_time
         self.tree.root.tick_once()

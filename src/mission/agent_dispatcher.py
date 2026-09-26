@@ -66,6 +66,16 @@ class AgentMissionDispatcher:
         if all(robot.state == RobotState.ACTING for robot in self.active_task.robots):
             self._update_action(delta_time)
 
+    def reset(self) -> None:
+        """Reinicia a fila da missão e o estado lógico do domínio."""
+        reset_domain = getattr(self.domain, "reset", None)
+        if callable(reset_domain):
+            reset_domain()
+        self.next_task_index = 0
+        self.active_task = None
+        self.completed = False
+        self.error_message = None
+
     def _start_next_task(self) -> None:
         if self.next_task_index >= len(self.task_keys):
             self.completed = True
@@ -78,17 +88,39 @@ class AgentMissionDispatcher:
         if errors or not robots:
             self._block("; ".join(errors) or "sem robôs elegíveis")
             return
+        self.active_task = ActiveTask(task_key, bound_task.task, robots)
+        self._move_to_current_action_target()
+
+    def _move_to_current_action_target(self) -> None:
+        """Leva os robôs ao ponto exigido pela ação atual da tarefa."""
+        assert self.active_task is not None
+        bound_task = self.bound_mission.tasks[self.active_task.task_key]
         location = self.environment.get_location_by_name(bound_task.location_name or "")
         if location is None:
             self._block(f"local indisponível: {bound_task.location_name}")
             return
 
-        self.active_task = ActiveTask(task_key, bound_task.task, robots)
-        for position_index, robot in enumerate(robots):
+        action = self.active_task.task.actions[self.active_task.action_index]
+        target = location
+        destination_name = location.name
+        if action.name == "open-door":
+            door_approach = self.environment.get_door_approach(location.name)
+            corridor = (
+                self.environment.get_location(pygame.Vector2(door_approach)) if door_approach is not None else None
+            )
+            if corridor is None:
+                self._block(f"porta sem acesso configurado: {location.name}")
+                return
+            target = Location(f"Porta de {location.name}", corridor.color, door_approach)
+            destination_name = target.name
+
+        for position_index, robot in enumerate(self.active_task.robots):
             robot.state = RobotState.MOVING
-            robot.current_task = f"Ir para {location.name}"
-            target = self._formation_target(location, position_index, len(robots), robot)
-            self.navigations[robot.label].set_target(target)
+            robot.current_task = f"Ir para {destination_name}"
+            formation_target = self._formation_target(
+                target, position_index, len(self.active_task.robots), robot
+            )
+            self.navigations[robot.label].set_target(formation_target)
 
     def _update_movement(self, delta_time: float) -> None:
         assert self.active_task is not None
@@ -132,7 +164,7 @@ class AgentMissionDispatcher:
             return
         self.active_task.action_index += 1
         if self.active_task.action_index < len(self.active_task.task.actions):
-            self._start_action()
+            self._move_to_current_action_target()
             return
         for robot in self.active_task.robots:
             robot.state = RobotState.IDLE
@@ -157,7 +189,7 @@ class AgentMissionDispatcher:
         for offset_x, offset_y in ordered_offsets:
             candidate = (location.center[0] + offset_x, location.center[1] + offset_y)
             same_location = self.environment.get_location(pygame.Vector2(candidate))
-            if same_location == location and self.environment.is_walkable(*candidate, robot.radius):
+            if same_location and same_location.color == location.color and self.environment.is_walkable(*candidate, robot.radius):
                 return Location(location.name, location.color, candidate)
         return location
 
