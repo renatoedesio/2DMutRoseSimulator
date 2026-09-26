@@ -36,36 +36,38 @@ python -m pip install -r requirements.txt
 
 ## Execução
 
+Os comandos ficam organizados em `scripts/`: `scripts/manual/` contém os cenários para exploração manual e `scripts/tools/` reúne validação, execução especializada e manutenção. O comando principal é `python -m scripts`.
+
 ### Modo manual
 
 Estes comandos abrem apenas o mapa e os robôs. A missão não é carregada automaticamente; os destinos precisam ser definidos por clique ou pelo comando `goto`:
 
 ```powershell
-python hospital_scenario_1.py
-python hospital_scenario_2.py
-python farm.py
+python -m scripts.manual.hospital_scenario_1
+python -m scripts.manual.hospital_scenario_2
+python -m scripts.manual.farm
 ```
 
 Para consultar todos os comandos principais, execute:
 
 ```powershell
-python help.py
+python -m scripts.help
 ```
 
 O Hospital — Cenário 1 contém `A-1` e `A-2` (Limpadores), `B-1` e `B-2` (Organizadores). O Hospital — Cenário 2 contém os dois Limpadores e apenas `B-1` como Organizador.
 
 ### Modo missão automática
 
-Para carregar uma decomposição, conectar os agentes e executar todas as tarefas do pacote visualmente, use `start.py`. Por exemplo, para executar `RoomPreparation` no Hospital — Cenário 1:
+Para carregar uma decomposição, conectar os agentes e executar todas as tarefas do pacote visualmente, use `python -m scripts`. Por exemplo, para executar `RoomPreparation` no Hospital — Cenário 1:
 
 ```powershell
-python start.py RoomPreparation scenario_1
+python -m scripts RoomPreparation scenario_1
 ```
 
 Este é o comando correto para executar o cenário completo da missão. A opção `--validate` apenas valida o pacote e não abre a janela:
 
 ```powershell
-python start.py RoomPreparation scenario_1 --validate
+python -m scripts RoomPreparation scenario_1 --validate
 ```
 
 ## Leitura de decomposições de missão
@@ -73,7 +75,7 @@ python start.py RoomPreparation scenario_1 --validate
 O leitor de missões funciona fora do Pygame. Ele lê um `task_output.json`, resolve os nomes lógicos para o cenário e valida locais, papéis, capacidades e quantidade de robôs antes de qualquer execução.
 
 ```powershell
-python mission_reader.py "C:\caminho\para\task_output.json" hospital-1
+python -m scripts.tools.mission_reader "C:\caminho\para\task_output.json" hospital-1
 ```
 
 Os cenários disponíveis para validação são `hospital-1`, `hospital-2` e `farm`. Os vínculos entre os nomes do JSON externo e os nomes do cenário ficam em `src/scenarios.py`. No Hospital, os nomes do World DB são usados diretamente (`RoomA`, `RoomB`, `RoomC` e `SanitizationRoom`); na Fazenda, `FarmA` é ligado a `Campo`.
@@ -81,17 +83,17 @@ Os cenários disponíveis para validação são `hospital-1`, `hospital-2` e `fa
 Quando o experimento também tiver um World DB, valide os dois arquivos antes de executar a decomposição:
 
 ```powershell
-python mission_reader.py "C:\caminho\para\task_output.json" hospital-1 --world-db "C:\caminho\para\World_db.xml"
+python -m scripts.tools.mission_reader "C:\caminho\para\task_output.json" hospital-1 --world-db "C:\caminho\para\World_db.xml"
 ```
 
-O cenário Hospital foi configurado conforme o exemplo de World DB: `RoomA`, `RoomB`, `RoomC` e `SanitizationRoom`. Esses nomes aparecem diretamente em `collision.png`, cada um com uma cor distinta. Para reconstruir o mapa Hospital de exemplo após uma alteração intencional, execute `python reset_hospital_map.py`.
+O cenário Hospital foi configurado conforme o exemplo de World DB: `RoomA`, `RoomB`, `RoomC` e `SanitizationRoom`. Esses nomes aparecem diretamente em `collision.png`, cada um com uma cor distinta. Para reconstruir o mapa Hospital de exemplo após uma alteração intencional, execute `python -m scripts.tools.reset_hospital_map`.
 
 ## Execução especializada do Hospital
 
 As regras `door_open`, `is_clean` e `is_prepared` pertencem ao domínio Hospital, não ao núcleo de missões. Para executar a decomposição com essas regras e observar o estado final das salas, sem abrir o Pygame:
 
 ```powershell
-python execute_hospital_mission.py "C:\caminho\para\task_output.json" "C:\caminho\para\World_db.xml" hospital-1
+python -m scripts.tools.execute_hospital_mission "C:\caminho\para\task_output.json" "C:\caminho\para\World_db.xml" hospital-1
 ```
 
 O núcleo apenas ordena tarefas e ações. A especialização Hospital avalia pré-condições e aplica efeitos como abrir porta, limpar sala, sanitizar robô e mover móveis. Outros domínios, como Fazenda, podem implementar suas próprias regras sem alterar o núcleo.
@@ -103,13 +105,13 @@ As missões ficam agrupadas em pacotes autocontidos em `missions/<família>/<cen
 Para listar o catálogo:
 
 ```powershell
-python start.py --list
+python -m scripts --list
 ```
 
 Para executar o pacote dentro do simulador, com agentes, rotas, estados e bateria:
 
 ```powershell
-python start.py RoomPreparation scenario_1
+python -m scripts RoomPreparation scenario_1
 ```
 
 Para apenas validar o pacote sem abrir a janela, acrescente `--validate`.

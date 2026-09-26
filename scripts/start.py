@@ -21,7 +21,7 @@ SIMULATOR_SCENARIOS = {
 
 def load_bundle_for_execution(family: str, scenario_name: str):
     """Carrega e valida um pacote, sem iniciar a janela do simulador."""
-    project_directory = Path(__file__).resolve().parent
+    project_directory = Path(__file__).resolve().parent.parent
     bundle = MissionCatalog(project_directory / "missions").load(family, scenario_name)
     if bundle.domain != "hospital":
         raise ValueError(f"Domínio ainda não suportado pelo iniciador: {bundle.domain}")
@@ -40,7 +40,7 @@ def main() -> None:
     parser.add_argument("--validate", action="store_true", help="Valida sem abrir o simulador")
     arguments = parser.parse_args()
 
-    catalog = MissionCatalog(Path(__file__).resolve().parent / "missions")
+    catalog = MissionCatalog(Path(__file__).resolve().parent.parent / "missions")
     if arguments.list:
         for bundle in catalog.list():
             print(f"{bundle.family} {bundle.scenario_name} -> {bundle.simulator_scenario}")

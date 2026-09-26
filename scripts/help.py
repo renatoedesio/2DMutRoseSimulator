@@ -10,22 +10,22 @@ SIMULADOR ROBÓTICO 2D — AJUDA
    python -m pip install -r requirements.txt
 
 2. Ver os pacotes de missão disponíveis
-   python start.py --list
+   python -m scripts --list
 
 3. Validar um pacote sem abrir o simulador
-   python start.py RoomPreparation scenario_1 --validate
+   python -m scripts RoomPreparation scenario_1 --validate
 
 4. Executar uma missão catalogada automaticamente (recomendado para experimentos)
-   python start.py RoomPreparation scenario_1
+   python -m scripts RoomPreparation scenario_1
 
 5. Abrir apenas o mapa em modo manual (não executa uma missão)
-   python hospital_scenario_1.py
-   python hospital_scenario_2.py
-   python farm.py
+   python -m scripts.manual.hospital_scenario_1
+   python -m scripts.manual.hospital_scenario_2
+   python -m scripts.manual.farm
 
    Para o Hospital — Cenário 1:
-   - modo missão automática: python start.py RoomPreparation scenario_1
-   - modo manual:          python hospital_scenario_1.py
+   - modo missão automática: python -m scripts RoomPreparation scenario_1
+   - modo manual:          python -m scripts.manual.hospital_scenario_1
 
 6. Controles na janela
    SETA CIMA / SETA BAIXO  alterna o robô selecionado
@@ -37,8 +37,7 @@ SIMULADOR ROBÓTICO 2D — AJUDA
    goto RoomA
    goto B-1 RoomB
 
-Observação: no Windows, execute os comandos com a extensão .py,
-por exemplo: python help.py
+Para consultar esta ajuda: python -m scripts.help
 """.strip()
     )
 
