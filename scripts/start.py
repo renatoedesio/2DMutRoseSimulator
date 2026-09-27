@@ -132,7 +132,15 @@ def main() -> None:
                     robot.state = RobotState.IDLE
                     robot.current_task = "Replanejado"
                 print("Replanejamento MutROSe aplicado.")
-                return AgentMissionDispatcher(updated_mission, HospitalMissionDomain(updated_world), simulator.environment, simulator.navigations, RecoveryStrategy.DYNAMIC_REPLANNING)
+                failed_task = failed_dispatcher.active_task.task if failed_dispatcher.active_task else None
+                pending_room = failed_task.location_token if failed_task else "desconhecida"
+                pending_reason = failed_dispatcher.error_message or "indisponivel"
+                print(f"Objetivo pendente: {pending_room}; razao: {pending_reason}")
+                return AgentMissionDispatcher(
+                    updated_mission, HospitalMissionDomain(updated_world), simulator.environment,
+                    simulator.navigations, RecoveryStrategy.DYNAMIC_REPLANNING, (),
+                    ((pending_room, pending_reason),),
+                )
             except (FileNotFoundError, ValueError, RuntimeError) as error:
                 print(f"Replanejamento falhou: {error}")
                 return None

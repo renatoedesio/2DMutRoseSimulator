@@ -3,6 +3,7 @@
 import json
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -54,7 +55,10 @@ class MutroseRunner:
             "RoomPreparation/gm_room_preparation.txt",
             "RoomPreparation/configuration.json",
         ]
+        print(f"[MutROSe] Gerando decomposicao para: {world_id}")
+        started_at = time.perf_counter()
         process = subprocess.run(command, cwd=self.mutrose_directory, text=True, capture_output=True)
+        elapsed = time.perf_counter() - started_at
         if process.returncode != 0:
             details = "\n".join(part for part in (process.stdout, process.stderr) if part.strip())
             raise RuntimeError(f"MutROSe terminou com código {process.returncode}.\n{details}")
@@ -66,6 +70,9 @@ class MutroseRunner:
         archived_output = self.room_preparation_directory / "output" / "runs" / world_id / "task_output.json"
         archived_output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(generated_output, archived_output)
+        with archived_output.open(encoding="utf-8") as source:
+            result = json.load(source)
+        print(f"[MutROSe] Concluido em {elapsed:.2f}s; tarefas={len(result.get('tasks', {}))}; decomposicoes={len(result.get('mission_decompositions', []))}")
         return MutroseGeneration(world_id, active_world, archived_output)
 
     def _load_catalog(self) -> dict:

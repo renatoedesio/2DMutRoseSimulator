@@ -33,6 +33,7 @@ class AgentMissionDispatcher:
         navigations,
         recovery_strategy: RecoveryStrategy = RecoveryStrategy.BASELINE,
         fault_events: tuple[dict, ...] = (),
+        pending_goals: tuple[tuple[str, str], ...] = (),
     ) -> None:
         self.bound_mission = bound_mission
         self.domain = domain
@@ -47,11 +48,14 @@ class AgentMissionDispatcher:
         self.failure_event: FailureEvent | None = None
         self.recovery_action: str | None = None
         self.fault_events = list(fault_events)
+        self.pending_goals = pending_goals
 
     @property
     def status_text(self) -> str:
         if self.error_message:
             return f"MISSÃO BLOQUEADA: {self.error_message}"
+        if self.completed and self.pending_goals:
+            return f"MISSAO PARCIALMENTE CONCLUIDA: {len(self.pending_goals)} pendencia(s)"
         if self.completed:
             return "MISSÃO CONCLUÍDA"
         if self.active_task is None:
