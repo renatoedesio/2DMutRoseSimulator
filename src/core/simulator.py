@@ -41,6 +41,8 @@ class Simulator:
         self.simulation_speed_index = self.SIMULATION_SPEEDS.index(1.0)
         self.command_console = CommandConsole()
         self.mission_dispatcher = None
+        self.recovery_handler = None
+        self._recovered_dispatcher = None
         self.font = pygame.font.Font(None, 28)
         self.running = True
 
@@ -52,6 +54,11 @@ class Simulator:
             self._handle_console_commands()
             if self.mission_dispatcher is not None:
                 self.mission_dispatcher.update(delta_time)
+                if self.mission_dispatcher.error_message and self.mission_dispatcher is not self._recovered_dispatcher and self.recovery_handler:
+                    self._recovered_dispatcher = self.mission_dispatcher
+                    replacement = self.recovery_handler(self.mission_dispatcher)
+                    if replacement is not None:
+                        self.mission_dispatcher = replacement
             for navigation in self.navigations:
                 navigation.tick(delta_time)
             self._render()
@@ -121,6 +128,9 @@ class Simulator:
     def set_mission_dispatcher(self, dispatcher) -> None:
         self.mission_dispatcher = dispatcher
 
+    def set_recovery_handler(self, handler) -> None:
+        self.recovery_handler = handler
+
     @property
     def selected_robot(self) -> Robot:
         return self.robots[self.selected_robot_index]
@@ -153,6 +163,17 @@ class Simulator:
 
     def _execute_command(self, command: str) -> None:
         parts = command.split()
+        if len(parts) == 3 and parts[0].casefold() == "fault" and self.mission_dispatcher is not None:
+            inject_fault = getattr(self.mission_dispatcher.domain, "inject_fault", None)
+            if not callable(inject_fault):
+                print("Dominio ativo nao permite injetar falhas.")
+                return
+            try:
+                inject_fault(parts[1].casefold(), parts[2])
+                print(f"Falha injetada: {parts[1]} em {parts[2]}.")
+            except ValueError as error:
+                print(error)
+            return
         if not parts or parts[0].casefold() != "goto" or len(parts) not in (2, 3):
             print("Comando inválido. Use: goto <sala> ou goto <robô> <sala>")
             return

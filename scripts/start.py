@@ -9,8 +9,11 @@ from src.core.mission.catalog import MissionCatalog
 from src.core.mission.decomposition_reader import DecompositionReader
 from src.core.mission.mutrose_runner import MutroseRunner
 from src.core.mission.recovery import RecoveryStrategy
+from src.core.mission.experiment_catalog import load_experiment
 from src.core.mission.scenario_binder import ScenarioBinder
 from src.core.mission.world_knowledge_reader import WorldKnowledgeReader
+from src.core.mission.world_state_updater import WorldStateUpdater
+from src.core.robot import RobotState
 from src.scenarios import HOSPITAL_SCENARIO_1, HOSPITAL_SCENARIO_2
 from src.core.simulator import Simulator
 
@@ -46,6 +49,7 @@ def main() -> None:
     parser.add_argument("--list", action="store_true", help="Lista os pacotes disponíveis")
     parser.add_argument("--list-worlds", action="store_true", help="Lista os mundos do MutROSe")
     parser.add_argument("--world", help="ID do mundo para gerar com o MutROSe")
+    parser.add_argument("--experiment", help="ID do manifesto em experiments/faults")
     parser.add_argument(
         "--recovery",
         choices=[strategy.value for strategy in RecoveryStrategy],
@@ -56,6 +60,11 @@ def main() -> None:
     arguments = parser.parse_args()
 
     project_directory = Path(__file__).resolve().parent.parent
+    experiment = load_experiment(project_directory, arguments.experiment) if arguments.experiment else None
+    if experiment:
+        arguments.world = experiment.world_id
+        if arguments.recovery == RecoveryStrategy.BASELINE.value:
+            arguments.recovery = experiment.recovery
     catalog = MissionCatalog(project_directory / "experiments")
     if arguments.list:
         for bundle in catalog.list():
@@ -99,8 +108,35 @@ def main() -> None:
         simulator.environment,
         simulator.navigations,
         RecoveryStrategy(arguments.recovery),
+        experiment.faults if experiment else (),
     )
     simulator.set_mission_dispatcher(dispatcher)
+    if generation and RecoveryStrategy(arguments.recovery) is RecoveryStrategy.DYNAMIC_REPLANNING:
+        def recover(failed_dispatcher):
+            if failed_dispatcher.recovery_action != "replan":
+                return None
+            try:
+                runner = MutroseRunner(project_directory)
+                WorldStateUpdater().write_hospital(
+                    failed_dispatcher.domain, runner.worlds_directory / "active" / "World_db.xml"
+                )
+                updated = runner.generate_active(f"{generation.world_id}_replan_1")
+                _, _, updated_world, updated_mission = load_bundle_for_execution(
+                    arguments.family, arguments.scenario, updated.task_output_path, updated.world_db_path
+                )
+                if not updated_mission.is_valid:
+                    print("Replanejamento invalido.")
+                    return None
+                for robot, navigation in zip(simulator.robots, simulator.navigations):
+                    navigation.reset()
+                    robot.state = RobotState.IDLE
+                    robot.current_task = "Replanejado"
+                print("Replanejamento MutROSe aplicado.")
+                return AgentMissionDispatcher(updated_mission, HospitalMissionDomain(updated_world), simulator.environment, simulator.navigations, RecoveryStrategy.DYNAMIC_REPLANNING)
+            except (FileNotFoundError, ValueError, RuntimeError) as error:
+                print(f"Replanejamento falhou: {error}")
+                return None
+        simulator.set_recovery_handler(recover)
     simulator.run()
 
 

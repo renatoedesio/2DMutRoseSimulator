@@ -129,6 +129,11 @@
           "door_open": true
         }
       }
+    },
+    {
+      "id": "door_jammed_room_a",
+      "world_db": "scenarios/AFFFFV_BFFV_CVVV/World_db.xml",
+      "description": "Door A is inoperable; Room A remains reachable through the service entrance."
     }
   ]
 }

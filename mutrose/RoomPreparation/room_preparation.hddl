@@ -6,6 +6,13 @@
         (sanitized ?r - robot)
         (prepared ?rm - room)
         (door-open ?rm - room)
+        (door-operational ?rm - room)
+        (accessible ?rm - room)
+        (alternate-access ?rm - room)
+        (standard-cleaning-available ?rm - room)
+        (backup-cleaning-available ?rm - room)
+        (standard-organization-available ?rm - room)
+        (alternative-organization-available ?rm - room)
     )
     (:capabilities moveobject cleaning sanitize door-opening)
 
@@ -15,6 +22,7 @@
         :task (RoomCleaning ?r ?rm)
         :precondition (and
             (door-open ?rm)    
+            (standard-cleaning-available ?rm)
         )
         :ordered-subtasks (and
             (clean-room ?r ?rm)
@@ -25,6 +33,8 @@
         :task (RoomCleaning ?r ?rm)
         :precondition (and
             (not (door-open ?rm))
+            (door-operational ?rm)
+            (standard-cleaning-available ?rm)
         )
         :subtasks (and
             (a1 (open-door ?r ?rm))
@@ -32,6 +42,30 @@
         )
         :ordering (and
             (a1 < a2)
+        )
+    )
+
+    (:method room-cleaning-backup-service
+        :parameters (?r - CleanerRobot ?rm - room)
+        :task (RoomCleaning ?r ?rm)
+        :precondition (and
+            (door-open ?rm)
+            (not (standard-cleaning-available ?rm))
+            (backup-cleaning-available ?rm)
+        )
+        :ordered-subtasks (and (clean-room-backup ?r ?rm))
+    )
+
+    (:method room-cleaning-alternate-access
+        :parameters (?r - CleanerRobot ?rm - room)
+        :task (RoomCleaning ?r ?rm)
+        :precondition (and
+            (not (door-open ?rm))
+            (not (door-operational ?rm))
+            (alternate-access ?rm)
+        )
+        :ordered-subtasks (and
+            (clean-room-alternative ?r ?rm)
         )
     )
 
@@ -57,14 +91,44 @@
         )
     )
 
+    (:action clean-room-alternative
+        :parameters (?r - CleanerRobot ?rm - room)
+        :required-capabilities (cleaning)
+        :precondition (and
+            (not (clean ?rm))
+            (alternate-access ?rm)
+        )
+        :effect (and
+            (clean ?rm)
+            (not (sanitized ?r))
+        )
+    )
+
+    (:action clean-room-backup
+        :parameters (?r - CleanerRobot ?rm - room)
+        :required-capabilities (cleaning)
+        :precondition (and (not (clean ?rm)) (backup-cleaning-available ?rm))
+        :effect (and (clean ?rm) (not (sanitized ?r)))
+    )
+
     (:task FurnitureMoving :parameters (?rt - robotteam ?rm - room))
     (:method furniture-moving
         :parameters (?rt - robotteam ?rm - room)
         :task (FurnitureMoving ?rt ?rm)
-        :precondition ()
+        :precondition (and (standard-organization-available ?rm))
         :ordered-subtasks (and
             (move-furniture ?rt ?rm)
         )
+    )
+
+    (:method furniture-moving-alternative
+        :parameters (?rt - robotteam ?rm - room)
+        :task (FurnitureMoving ?rt ?rm)
+        :precondition (and
+            (not (standard-organization-available ?rm))
+            (alternative-organization-available ?rm)
+        )
+        :ordered-subtasks (and (move-furniture-alternative ?rt ?rm))
     )
 
     (:action move-furniture
@@ -74,6 +138,13 @@
         :effect (and
             (prepared ?rm)
         )
+    )
+
+    (:action move-furniture-alternative
+        :parameters (?rt - robotteam ?rm - room)
+        :required-capabilities (moveobject)
+        :precondition (and (alternative-organization-available ?rm))
+        :effect (and (prepared ?rm))
     )
 
     (:task RobotSanitization :parameters (?r - CleanerRobot ?srm - room))

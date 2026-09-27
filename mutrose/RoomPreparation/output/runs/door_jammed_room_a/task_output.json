@@ -9,15 +9,7 @@
             "capabilities": "cleaning"
         },
         {
-            "name": "clean-room-backup",
-            "capabilities": "cleaning"
-        },
-        {
             "name": "move-furniture",
-            "capabilities": "moveobject"
-        },
-        {
-            "name": "move-furniture-alternative",
             "capabilities": "moveobject"
         },
         {
@@ -39,6 +31,279 @@
             },
             "arguments_values": {
                 "?r": "",
+                "?rm": "RoomA"
+            },
+            "locations": "RoomA",
+            "robots_num": {
+                "fixed": "True",
+                "num": "1"
+            },
+            "preconditions": [
+                {
+                    "predicate": "RoomA.door_open",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not RoomA.is_clean",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                }
+            ],
+            "effects": [
+                {
+                    "predicate": "RoomA.is_clean",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not ?r.is_sanitized",
+                    "vars": "?r",
+                    "var_types": "robot"
+                }
+            ],
+            "triggering_events": [
+                "E2",
+                "E1"
+            ],
+            "decomposition": {
+                "a0": {
+                    "name": "clean-room",
+                    "arguments": "?r ?rm"
+                }
+            },
+            "group": "True",
+            "divisible": "True"
+        },
+        "t1": {
+            "id": "AT1_1|2",
+            "name": "RoomCleaning",
+            "arguments": {
+                "?r": "CleanerRobot",
+                "?rm": "room"
+            },
+            "arguments_values": {
+                "?r": "",
+                "?rm": "RoomA"
+            },
+            "locations": "RoomA",
+            "robots_num": {
+                "fixed": "True",
+                "num": "1"
+            },
+            "preconditions": [
+                {
+                    "predicate": "not RoomA.door_open",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "RoomA.door_operational",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not RoomA.door_open",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not RoomA.is_clean",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                }
+            ],
+            "effects": [
+                {
+                    "predicate": "RoomA.door_open",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "RoomA.is_clean",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not ?r.is_sanitized",
+                    "vars": "?r",
+                    "var_types": "robot"
+                }
+            ],
+            "triggering_events": [
+                "E2",
+                "E1"
+            ],
+            "decomposition": {
+                "a0": {
+                    "name": "open-door",
+                    "arguments": "?r ?rm"
+                },
+                "a1": {
+                    "name": "clean-room",
+                    "arguments": "?r ?rm"
+                }
+            },
+            "group": "True",
+            "divisible": "True"
+        },
+        "t2": {
+            "id": "AT1_1|3",
+            "name": "RoomCleaning",
+            "arguments": {
+                "?r": "CleanerRobot",
+                "?rm": "room"
+            },
+            "arguments_values": {
+                "?r": "",
+                "?rm": "RoomA"
+            },
+            "locations": "RoomA",
+            "robots_num": {
+                "fixed": "True",
+                "num": "1"
+            },
+            "preconditions": [
+                {
+                    "predicate": "not RoomA.door_open",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not RoomA.door_operational",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "RoomA.alternate_access",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not RoomA.is_clean",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "RoomA.alternate_access",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                }
+            ],
+            "effects": [
+                {
+                    "predicate": "RoomA.is_clean",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                },
+                {
+                    "predicate": "not ?r.is_sanitized",
+                    "vars": "?r",
+                    "var_types": "robot"
+                }
+            ],
+            "triggering_events": [
+                "E2",
+                "E1"
+            ],
+            "decomposition": {
+                "a0": {
+                    "name": "clean-room-alternative",
+                    "arguments": "?r ?rm"
+                }
+            },
+            "group": "True",
+            "divisible": "True"
+        },
+        "t3": {
+            "id": "AT2_1|1",
+            "name": "RobotSanitization",
+            "arguments": {
+                "?r": "CleanerRobot",
+                "?srm": "room"
+            },
+            "arguments_values": {
+                "?r": "",
+                "?srm": "SanitizationRoom"
+            },
+            "locations": "SanitizationRoom",
+            "robots_num": {
+                "fixed": "True",
+                "num": "1"
+            },
+            "preconditions": [
+                {
+                    "predicate": "not ?r.is_sanitized",
+                    "vars": "?r",
+                    "var_types": "robot"
+                }
+            ],
+            "effects": [
+                {
+                    "predicate": "?r.is_sanitized",
+                    "vars": "?r",
+                    "var_types": "robot"
+                }
+            ],
+            "triggering_events": [
+                "E2",
+                "E1"
+            ],
+            "decomposition": {
+                "a0": {
+                    "name": "sanitize-robot",
+                    "arguments": "?r ?srm"
+                }
+            },
+            "group": "True",
+            "divisible": "True"
+        },
+        "t4": {
+            "id": "AT3_1|1",
+            "name": "FurnitureMoving",
+            "arguments": {
+                "?rt": "robotteam",
+                "?rm": "room"
+            },
+            "arguments_values": {
+                "?rt": "",
+                "?rm": "RoomA"
+            },
+            "locations": "RoomA",
+            "robots_num": {
+                "fixed": "False",
+                "min": "2",
+                "max": "4"
+            },
+            "preconditions": "",
+            "effects": [
+                {
+                    "predicate": "RoomA.is_prepared",
+                    "vars": "RoomA",
+                    "var_types": "room"
+                }
+            ],
+            "triggering_events": [
+                "E2"
+            ],
+            "decomposition": {
+                "a0": {
+                    "name": "move-furniture",
+                    "arguments": "?rt ?rm"
+                }
+            },
+            "group": "True",
+            "divisible": "True"
+        },
+        "t5": {
+            "id": "AT1_2|1",
+            "name": "RoomCleaning",
+            "arguments": {
+                "?r": "CleanerRobot",
+                "?rm": "room"
+            },
+            "arguments_values": {
+                "?r": "",
                 "?rm": "RoomB"
             },
             "locations": "RoomB",
@@ -49,11 +314,6 @@
             "preconditions": [
                 {
                     "predicate": "RoomB.door_open",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "RoomB.standard_cleaning_available",
                     "vars": "RoomB",
                     "var_types": "room"
                 },
@@ -88,8 +348,8 @@
             "group": "True",
             "divisible": "True"
         },
-        "t1": {
-            "id": "AT1_1|2",
+        "t6": {
+            "id": "AT1_2|2",
             "name": "RoomCleaning",
             "arguments": {
                 "?r": "CleanerRobot",
@@ -112,11 +372,6 @@
                 },
                 {
                     "predicate": "RoomB.door_operational",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "RoomB.standard_cleaning_available",
                     "vars": "RoomB",
                     "var_types": "room"
                 },
@@ -165,76 +420,8 @@
             "group": "True",
             "divisible": "True"
         },
-        "t2": {
-            "id": "AT1_1|3",
-            "name": "RoomCleaning",
-            "arguments": {
-                "?r": "CleanerRobot",
-                "?rm": "room"
-            },
-            "arguments_values": {
-                "?r": "",
-                "?rm": "RoomB"
-            },
-            "locations": "RoomB",
-            "robots_num": {
-                "fixed": "True",
-                "num": "1"
-            },
-            "preconditions": [
-                {
-                    "predicate": "RoomB.door_open",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "not RoomB.standard_cleaning_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "RoomB.backup_cleaning_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "not RoomB.is_clean",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "RoomB.backup_cleaning_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                }
-            ],
-            "effects": [
-                {
-                    "predicate": "RoomB.is_clean",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "not ?r.is_sanitized",
-                    "vars": "?r",
-                    "var_types": "robot"
-                }
-            ],
-            "triggering_events": [
-                "E2",
-                "E1"
-            ],
-            "decomposition": {
-                "a0": {
-                    "name": "clean-room-backup",
-                    "arguments": "?r ?rm"
-                }
-            },
-            "group": "True",
-            "divisible": "True"
-        },
-        "t3": {
-            "id": "AT1_1|4",
+        "t7": {
+            "id": "AT1_2|3",
             "name": "RoomCleaning",
             "arguments": {
                 "?r": "CleanerRobot",
@@ -301,8 +488,8 @@
             "group": "True",
             "divisible": "True"
         },
-        "t4": {
-            "id": "AT2_1|1",
+        "t8": {
+            "id": "AT2_2|1",
             "name": "RobotSanitization",
             "arguments": {
                 "?r": "CleanerRobot",
@@ -344,8 +531,8 @@
             "group": "True",
             "divisible": "True"
         },
-        "t5": {
-            "id": "AT3_1|1",
+        "t9": {
+            "id": "AT3_2|1",
             "name": "FurnitureMoving",
             "arguments": {
                 "?rt": "robotteam",
@@ -361,13 +548,7 @@
                 "min": "2",
                 "max": "4"
             },
-            "preconditions": [
-                {
-                    "predicate": "RoomB.standard_organization_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                }
-            ],
+            "preconditions": "",
             "effects": [
                 {
                     "predicate": "RoomB.is_prepared",
@@ -386,59 +567,6 @@
             },
             "group": "True",
             "divisible": "True"
-        },
-        "t6": {
-            "id": "AT3_1|2",
-            "name": "FurnitureMoving",
-            "arguments": {
-                "?rt": "robotteam",
-                "?rm": "room"
-            },
-            "arguments_values": {
-                "?rt": "",
-                "?rm": "RoomB"
-            },
-            "locations": "RoomB",
-            "robots_num": {
-                "fixed": "False",
-                "min": "2",
-                "max": "4"
-            },
-            "preconditions": [
-                {
-                    "predicate": "not RoomB.standard_organization_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "RoomB.alternative_organization_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                },
-                {
-                    "predicate": "RoomB.alternative_organization_available",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                }
-            ],
-            "effects": [
-                {
-                    "predicate": "RoomB.is_prepared",
-                    "vars": "RoomB",
-                    "var_types": "room"
-                }
-            ],
-            "triggering_events": [
-                "E2"
-            ],
-            "decomposition": {
-                "a0": {
-                    "name": "move-furniture-alternative",
-                    "arguments": "?rt ?rm"
-                }
-            },
-            "group": "True",
-            "divisible": "True"
         }
     },
     "constraints": [
@@ -446,91 +574,91 @@
             "type": "SEQ",
             "task_instances": {
                 "t0": "t0",
-                "t1": "t5"
+                "t1": "t4"
+            }
+        },
+        {
+            "type": "SEQ",
+            "task_instances": {
+                "t0": "t1",
+                "t1": "t4"
+            }
+        },
+        {
+            "type": "SEQ",
+            "task_instances": {
+                "t0": "t2",
+                "t1": "t4"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
                 "t0": "t0",
-                "t1": "t6"
+                "t1": "t3"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
                 "t0": "t1",
-                "t1": "t5"
-            }
-        },
-        {
-            "type": "SEQ",
-            "task_instances": {
-                "t0": "t1",
-                "t1": "t6"
+                "t1": "t3"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
                 "t0": "t2",
-                "t1": "t5"
+                "t1": "t3"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
-                "t0": "t2",
-                "t1": "t6"
+                "t0": "t5",
+                "t1": "t9"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
-                "t0": "t3",
-                "t1": "t5"
+                "t0": "t6",
+                "t1": "t9"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
-                "t0": "t3",
-                "t1": "t6"
+                "t0": "t7",
+                "t1": "t9"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
-                "t0": "t0",
-                "t1": "t4"
+                "t0": "t5",
+                "t1": "t8"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
-                "t0": "t1",
-                "t1": "t4"
+                "t0": "t6",
+                "t1": "t8"
             }
         },
         {
             "type": "SEQ",
             "task_instances": {
-                "t0": "t2",
-                "t1": "t4"
-            }
-        },
-        {
-            "type": "SEQ",
-            "task_instances": {
-                "t0": "t3",
-                "t1": "t4"
+                "t0": "t7",
+                "t1": "t8"
             }
         },
         {
             "type": "EC",
             "task_instances": {
                 "t0": "t0",
-                "t1": "t4"
+                "t1": "t3"
             },
             "group": "False",
             "divisible": "True"
@@ -539,7 +667,7 @@
             "type": "EC",
             "task_instances": {
                 "t0": "t1",
-                "t1": "t4"
+                "t1": "t3"
             },
             "group": "False",
             "divisible": "True"
@@ -548,7 +676,7 @@
             "type": "EC",
             "task_instances": {
                 "t0": "t2",
-                "t1": "t4"
+                "t1": "t3"
             },
             "group": "False",
             "divisible": "True"
@@ -556,8 +684,26 @@
         {
             "type": "EC",
             "task_instances": {
-                "t0": "t3",
-                "t1": "t4"
+                "t0": "t5",
+                "t1": "t8"
+            },
+            "group": "False",
+            "divisible": "True"
+        },
+        {
+            "type": "EC",
+            "task_instances": {
+                "t0": "t6",
+                "t1": "t8"
+            },
+            "group": "False",
+            "divisible": "True"
+        },
+        {
+            "type": "EC",
+            "task_instances": {
+                "t0": "t7",
+                "t1": "t8"
             },
             "group": "False",
             "divisible": "True"
@@ -565,9 +711,12 @@
     ],
     "mission_decompositions": [
         [
-            "t0",
+            "t2",
+            "t3",
             "t4",
-            "t5"
+            "t5",
+            "t8",
+            "t9"
         ]
     ]
 }

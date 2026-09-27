@@ -1,0 +1,12 @@
+{
+  "id": "door_jammed_room_a",
+  "world": "AFFF_BFFV_CVVV",
+  "recovery": "dynamic_replanning",
+  "faults": [
+    {
+      "fault": "door_jammed",
+      "target": "RoomA",
+      "trigger": {"type": "before_action", "action": "open-door"}
+    }
+  ]
+}

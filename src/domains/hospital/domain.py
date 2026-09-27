@@ -12,6 +12,13 @@ class HospitalRoomState:
     is_clean: bool
     is_prepared: bool
     door_open: bool
+    door_operational: bool = True
+    accessible: bool = True
+    alternate_access: bool = False
+    standard_cleaning_available: bool = True
+    backup_cleaning_available: bool = False
+    standard_organization_available: bool = True
+    alternative_organization_available: bool = False
 
 
 class HospitalMissionDomain:
@@ -19,7 +26,11 @@ class HospitalMissionDomain:
 
     def __init__(self, world_knowledge: WorldKnowledge) -> None:
         self._initial_rooms = {
-            name: HospitalRoomState(room.is_clean, room.is_prepared, room.door_open)
+            name: HospitalRoomState(
+                room.is_clean, room.is_prepared, room.door_open, room.door_operational, room.accessible, room.alternate_access,
+                room.standard_cleaning_available, room.backup_cleaning_available,
+                room.standard_organization_available, room.alternative_organization_available
+            )
             for name, room in world_knowledge.rooms.items()
         }
         self.rooms: dict[str, HospitalRoomState] = {}
@@ -29,7 +40,11 @@ class HospitalMissionDomain:
     def reset(self) -> None:
         """Restaura as condições iniciais das salas e dos robôs."""
         self.rooms = {
-            name: HospitalRoomState(room.is_clean, room.is_prepared, room.door_open)
+            name: HospitalRoomState(
+                room.is_clean, room.is_prepared, room.door_open, room.door_operational, room.accessible, room.alternate_access,
+                room.standard_cleaning_available, room.backup_cleaning_available,
+                room.standard_organization_available, room.alternative_organization_available
+            )
             for name, room in self._initial_rooms.items()
         }
         self.robot_sanitized.clear()
@@ -42,12 +57,26 @@ class HospitalMissionDomain:
                 errors.append(f"pré-condição não satisfeita: {predicate}")
         return errors
 
+    def inject_fault(self, fault_name: str, room_name: str) -> None:
+        room = self.rooms.get(room_name)
+        if room is None:
+            raise ValueError(f"sala Hospital nao encontrada: {room_name}")
+        if fault_name == "door_jammed":
+            room.door_operational = False
+            room.door_open = False
+            room.accessible = False
+            return
+        raise ValueError(f"falha Hospital nao suportada: {fault_name}")
+
     def action_spec(self, action_name: str) -> ActionSpec:
         specs = {
             "open-door": ActionSpec(2.0, 2.0),
             "clean-room": ActionSpec(5.0, 12.0),
+            "clean-room-alternative": ActionSpec(6.0, 14.0),
+            "clean-room-backup": ActionSpec(7.0, 16.0),
             "sanitize-robot": ActionSpec(4.0, 4.0),
             "move-furniture": ActionSpec(8.0, 15.0),
+            "move-furniture-alternative": ActionSpec(10.0, 18.0),
         }
         if action_name not in specs:
             raise ValueError(f"ação Hospital sem duração configurada: {action_name}")
@@ -56,6 +85,8 @@ class HospitalMissionDomain:
     def execute_action(self, action_name: str, task: MissionTask, robot_labels: tuple[str, ...]) -> str:
         room = self._room_for(task)
         if action_name == "open-door":
+            if not room.door_operational:
+                raise ValueError("porta inoperante")
             room.door_open = True
             return f"porta de {task.location_token} aberta"
         if action_name == "clean-room":
@@ -65,6 +96,13 @@ class HospitalMissionDomain:
             for robot_label in robot_labels:
                 self.robot_sanitized[robot_label] = False
             return f"{task.location_token} limpo por {', '.join(robot_labels)}"
+        if action_name == "clean-room-alternative":
+            if not room.alternate_access:
+                raise ValueError("acesso alternativo indisponivel")
+            room.is_clean = True
+            for robot_label in robot_labels:
+                self.robot_sanitized[robot_label] = False
+            return f"{task.location_token} limpo pelo acesso alternativo por {', '.join(robot_labels)}"
         if action_name == "sanitize-robot":
             for robot_label in robot_labels:
                 self.robot_sanitized[robot_label] = True

@@ -42,6 +42,12 @@ class MutroseRunner:
         active_world.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_world, active_world)
 
+        return self.generate_active(world_id)
+
+    def generate_active(self, world_id: str) -> MutroseGeneration:
+        """Executa usando o World DB ativo, preservando uma copia por tentativa."""
+        active_world = self.worlds_directory / "active" / "World_db.xml"
+
         command = [
             str(self.mutrose_directory / "mutrose.exe"),
             "RoomPreparation/room_preparation.hddl",

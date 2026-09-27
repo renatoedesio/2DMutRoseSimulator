@@ -95,6 +95,68 @@
                 "pred": "door-open",
                 "arg_sorts": ["room"]
             }
+        },
+        {
+            "type": "attribute",
+            "name": "door_operational",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {
+                "pred": "door-operational",
+                "arg_sorts": ["room"]
+            }
+        },
+        {
+            "type": "attribute",
+            "name": "accessible",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {"pred": "accessible", "arg_sorts": ["room"]}
+        },
+        {
+            "type": "attribute",
+            "name": "alternate_access",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {
+                "pred": "alternate-access",
+                "arg_sorts": ["room"]
+            }
+        },
+        {
+            "type": "attribute",
+            "name": "standard_cleaning_available",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {"pred": "standard-cleaning-available", "arg_sorts": ["room"]}
+        },
+        {
+            "type": "attribute",
+            "name": "backup_cleaning_available",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {"pred": "backup-cleaning-available", "arg_sorts": ["room"]}
+        },
+        {
+            "type": "attribute",
+            "name": "standard_organization_available",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {"pred": "standard-organization-available", "arg_sorts": ["room"]}
+        },
+        {
+            "type": "attribute",
+            "name": "alternative_organization_available",
+            "relates_to": "Room",
+            "belongs_to": "world_db",
+            "mapped_type": "predicate",
+            "map": {"pred": "alternative-organization-available", "arg_sorts": ["room"]}
         }
     ]
 }

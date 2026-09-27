@@ -32,6 +32,7 @@ class AgentMissionDispatcher:
         environment,
         navigations,
         recovery_strategy: RecoveryStrategy = RecoveryStrategy.BASELINE,
+        fault_events: tuple[dict, ...] = (),
     ) -> None:
         self.bound_mission = bound_mission
         self.domain = domain
@@ -45,6 +46,7 @@ class AgentMissionDispatcher:
         self.recovery_strategy = recovery_strategy
         self.failure_event: FailureEvent | None = None
         self.recovery_action: str | None = None
+        self.fault_events = list(fault_events)
 
     @property
     def status_text(self) -> str:
@@ -148,6 +150,13 @@ class AgentMissionDispatcher:
     def _start_action(self) -> None:
         assert self.active_task is not None
         action = self.active_task.task.actions[self.active_task.action_index]
+        for event in self.fault_events[:]:
+            trigger = event.get("trigger", {})
+            if trigger.get("type") == "before_action" and trigger.get("action") == action.name:
+                inject_fault = getattr(self.domain, "inject_fault", None)
+                if callable(inject_fault):
+                    inject_fault(event["fault"], event["target"])
+                self.fault_events.remove(event)
         spec = self.domain.action_spec(action.name)
         for robot in self.active_task.robots:
             if robot.battery < spec.battery_cost:
