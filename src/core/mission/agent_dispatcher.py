@@ -34,6 +34,8 @@ class AgentMissionDispatcher:
         recovery_strategy: RecoveryStrategy = RecoveryStrategy.BASELINE,
         fault_events: tuple[dict, ...] = (),
         pending_goals: tuple[tuple[str, str], ...] = (),
+        assurance_runtime=None,
+        localization_sensor=None,
     ) -> None:
         self.bound_mission = bound_mission
         self.domain = domain
@@ -49,6 +51,9 @@ class AgentMissionDispatcher:
         self.recovery_action: str | None = None
         self.fault_events = list(fault_events)
         self.pending_goals = pending_goals
+        self.assurance_runtime = assurance_runtime
+        self.localization_sensor = localization_sensor
+        self._latest_assessment_ids: tuple[str, ...] = ()
 
     @property
     def status_text(self) -> str:
@@ -70,6 +75,7 @@ class AgentMissionDispatcher:
             return
 
         if any(navigation.error_message for navigation in self._active_navigations()):
+            self._assess_reachability("BLOCKED")
             self._block("falha de navegação")
             return
 
@@ -108,6 +114,7 @@ class AgentMissionDispatcher:
             self._block("; ".join(errors) or "sem robôs elegíveis")
             return
         self.active_task = ActiveTask(task_key, bound_task.task, robots)
+        self._latest_assessment_ids = ()
         self._move_to_current_action_target()
 
     def _move_to_current_action_target(self) -> None:
@@ -153,6 +160,7 @@ class AgentMissionDispatcher:
 
     def _start_action(self) -> None:
         assert self.active_task is not None
+        self._assess_reachability("AVAILABLE")
         action = self.active_task.task.actions[self.active_task.action_index]
         for event in self.fault_events[:]:
             trigger = event.get("trigger", {})
@@ -227,7 +235,49 @@ class AgentMissionDispatcher:
         self.failure_event = FailureEvent(message, task_key, action_name, 0)
         self.recovery_action = decide_recovery(self.recovery_strategy, self.failure_event).action
         self.error_message = message
+        if self.assurance_runtime is not None:
+            self.assurance_runtime.record_decision(
+                {
+                    "task_id": task_key,
+                    "action_name": action_name,
+                    "reason": message,
+                    "response_type": self.recovery_action,
+                    "assessment_ids": list(self._latest_assessment_ids),
+                }
+            )
         if self.active_task:
             for robot in self.active_task.robots:
                 robot.state = RobotState.BLOCKED
                 robot.current_task = message
+
+    def _assess_reachability(self, path_status: str) -> None:
+        """Traduz a navegação simulada em Evidence sem entregar truth ao core."""
+        if self.assurance_runtime is None or self.active_task is None:
+            return
+        robot = self.active_task.robots[0]
+        measurement = (
+            self.localization_sensor.observe((robot.position.x, robot.position.y))
+            if self.localization_sensor is not None
+            else None
+        )
+        if measurement is None:
+            return
+        assessments = self.assurance_runtime.assess_reachability(
+            self.active_task.task_key,
+            path_status,
+            localization_sigma_m=measurement.sigma_m,
+            measured_position_m=(measurement.x_m, measurement.y_m),
+            source=measurement.source,
+        )
+        self._latest_assessment_ids = tuple(assessment.assessment_id for assessment in assessments)
+        self.assurance_runtime.record_ground_truth(
+            {
+                "task_id": self.active_task.task_key,
+                "event": "navigation",
+                "path_status": path_status,
+                "robot_positions": {
+                    robot.label: {"x_px": robot.position.x, "y_px": robot.position.y}
+                    for robot in self.active_task.robots
+                },
+            }
+        )

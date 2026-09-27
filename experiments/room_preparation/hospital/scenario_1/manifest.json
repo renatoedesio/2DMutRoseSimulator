@@ -2,5 +2,6 @@
   "domain": "hospital",
   "simulator_scenario": "hospital-1",
   "decomposition": "task_output.json",
-  "world_db": "World_db.xml"
+  "world_db": "World_db.xml",
+  "assurance_contract": "assurance/contract.yaml"
 }

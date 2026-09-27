@@ -1,6 +1,7 @@
 """Inicia uma missão catalogada pelo nome da família e do cenário."""
 
 import argparse
+import json
 from pathlib import Path
 
 from src.domains.hospital.domain import HospitalMissionDomain
@@ -14,6 +15,7 @@ from src.core.mission.scenario_binder import ScenarioBinder
 from src.core.mission.world_knowledge_reader import WorldKnowledgeReader
 from src.core.mission.world_state_updater import WorldStateUpdater
 from src.core.robot import RobotState
+from src.integration.assurance_runtime import AssuranceRuntime, RunArtifacts
 from src.scenarios import HOSPITAL_SCENARIO_1, HOSPITAL_SCENARIO_2
 from src.core.simulator import Simulator
 
@@ -94,12 +96,36 @@ def main() -> None:
         for issue in bound_mission.issues:
             print(f"- {issue.task_key}: {issue.message}")
         return
+    assurance_runtime = None
+    if bundle.assurance_contract_path is not None:
+        assurance_validator = AssuranceRuntime(bundle.assurance_contract_path)
+        assurance_validator.validate_tasks(set(bound_mission.mission.tasks))
     print(f"Pacote validado: {bundle.family}/{bundle.scenario_name}")
     if generation:
         print(f"Mundo MutROSe: {generation.world_id}")
     print(f"Política de recuperação: {arguments.recovery}")
     if arguments.validate:
         return
+
+    if bundle.assurance_contract_path is not None:
+        artifacts = RunArtifacts.create(
+            project_directory,
+            bundle.family,
+            bundle.domain,
+            bundle.scenario_name,
+            bundle.assurance_contract_path,
+        )
+        assurance_runtime = AssuranceRuntime(bundle.assurance_contract_path, artifacts)
+        run_manifest = artifacts.directory / "run_manifest.json"
+        manifest_data = json.loads(run_manifest.read_text(encoding="utf-8"))
+        manifest_data["meters_per_pixel"] = simulator_scenario.meters_per_pixel
+        manifest_data["localization_sensor"] = {
+            "sigma_m": simulator_scenario.localization_sensor.sigma_m,
+            "bias_m": list(simulator_scenario.localization_sensor.bias_m),
+            "seed": simulator_scenario.localization_sensor.seed,
+        }
+        run_manifest.write_text(json.dumps(manifest_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"Assurance ativo; artefatos: {artifacts.directory}")
 
     simulator = Simulator(simulator_scenario)
     dispatcher = AgentMissionDispatcher(
@@ -109,6 +135,8 @@ def main() -> None:
         simulator.navigations,
         RecoveryStrategy(arguments.recovery),
         experiment.faults if experiment else (),
+        assurance_runtime=assurance_runtime,
+        localization_sensor=simulator.localization_sensor,
     )
     simulator.set_mission_dispatcher(dispatcher)
     if generation and RecoveryStrategy(arguments.recovery) is RecoveryStrategy.DYNAMIC_REPLANNING:
@@ -139,7 +167,7 @@ def main() -> None:
                 return AgentMissionDispatcher(
                     updated_mission, HospitalMissionDomain(updated_world), simulator.environment,
                     simulator.navigations, RecoveryStrategy.DYNAMIC_REPLANNING, (),
-                    ((pending_room, pending_reason),),
+                    ((pending_room, pending_reason),), assurance_runtime, simulator.localization_sensor,
                 )
             except (FileNotFoundError, ValueError, RuntimeError) as error:
                 print(f"Replanejamento falhou: {error}")

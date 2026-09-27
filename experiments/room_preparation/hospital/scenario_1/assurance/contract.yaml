@@ -1,0 +1,64 @@
+# Limites derivados de reachability_geometry.json, usando a menor folga da
+# rota estimada, raio de robô de 0.16 m, margem de navegação de 0.06 m e
+# cobertura normal bicaudal de 95% (k = 1.95996). A análise é estática: cada
+# rota parte da posição inicial do primeiro robô elegível.
+contract_version: "1.0-draft"
+mission_id: room-preparation-hospital-scenario-1
+
+tasks:
+  t0:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.010204269138493082}
+  t1:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.07653201853869811}
+  t2:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.010204269138493082}
+  t3:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.010204269138493082}
+  t4:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.010204269138493082}
+  t5:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.07653201853869811}
+  t6:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.010204269138493082}
+  t7:
+    assumptions:
+      - id: A-Reachability
+        type: Reachability
+        semantics_version: "1.0-draft"
+        criteria_version: "simulator2d-static-clearance-95-v1"
+        criteria: {max_localization_uncertainty: 0.010204269138493082}

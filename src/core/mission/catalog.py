@@ -13,6 +13,7 @@ class MissionBundle:
     simulator_scenario: str
     decomposition_path: Path
     world_db_path: Path
+    assurance_contract_path: Path | None
 
 
 class MissionCatalog:
@@ -53,6 +54,11 @@ class MissionCatalog:
             simulator_scenario=manifest["simulator_scenario"],
             decomposition_path=self._bundle_file(bundle_directory, manifest["decomposition"]),
             world_db_path=self._bundle_file(bundle_directory, manifest["world_db"]),
+            assurance_contract_path=(
+                self._bundle_file(bundle_directory, manifest["assurance_contract"])
+                if manifest.get("assurance_contract")
+                else None
+            ),
         )
 
     def list(self) -> list[MissionBundle]:

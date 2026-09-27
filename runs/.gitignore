@@ -1,0 +1,4 @@
+# Preserve this directory and its documentation, but never version run output.
+*
+!.gitignore
+!README.md

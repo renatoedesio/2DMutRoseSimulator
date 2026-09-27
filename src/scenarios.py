@@ -16,6 +16,15 @@ class RobotDefinition:
 
 
 @dataclass(frozen=True)
+class LocalizationSensorDefinition:
+    """Parâmetros do sensor de localização simulado de um cenário."""
+
+    sigma_m: float = 0.0
+    bias_m: tuple[float, float] = (0.0, 0.0)
+    seed: int = 42
+
+
+@dataclass(frozen=True)
 class Scenario:
     """Configuração visual, semântica e de agentes de um cenário."""
 
@@ -29,6 +38,8 @@ class Scenario:
     robots: tuple[RobotDefinition, ...]
     location_aliases: dict[str, str]
     role_aliases: dict[str, tuple[str, ...]]
+    meters_per_pixel: float = 0.01
+    localization_sensor: LocalizationSensorDefinition = field(default_factory=LocalizationSensorDefinition)
     door_approaches: dict[str, tuple[int, int]] = field(default_factory=dict)
     door_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
 
@@ -60,6 +71,7 @@ HOSPITAL_SCENARIO_1 = Scenario(
         "SanitizationRoom": "SanitizationRoom",
     },
     role_aliases={"CleanerRobot": ("Limpador",), "robotteam": ("Organizador",)},
+    meters_per_pixel=0.01,
     door_approaches={
         "RoomA": (320, 393),
         "RoomB": (960, 393),
@@ -89,6 +101,7 @@ HOSPITAL_SCENARIO_2 = Scenario(
     ),
     location_aliases=HOSPITAL_SCENARIO_1.location_aliases,
     role_aliases=HOSPITAL_SCENARIO_1.role_aliases,
+    meters_per_pixel=HOSPITAL_SCENARIO_1.meters_per_pixel,
     door_approaches=HOSPITAL_SCENARIO_1.door_approaches,
     door_positions=HOSPITAL_SCENARIO_1.door_positions,
 )
@@ -108,6 +121,7 @@ FARM = Scenario(
     robots=(RobotDefinition("F-1", "Trabalhador", (90, 90), (230, 126, 34), frozenset({"cleaning", "moveobject"})),),
     location_aliases={"FarmA": "Campo", "Barn": "Galpao", "Storage": "Patio"},
     role_aliases={"FieldRobot": ("Trabalhador",), "robotteam": ("Trabalhador",)},
+    meters_per_pixel=0.01,
 )
 
 # Mantém compatibilidade com o inicializador anterior.

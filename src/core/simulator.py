@@ -8,6 +8,7 @@ from src.core.behavior_tree import NavigationController
 from src.core.command_console import CommandConsole
 from src.core.environment import Environment
 from src.core.robot import Robot
+from src.platforms.simulator2d.localization_sensor import SimulatedLocalizationSensor
 from src.scenarios import Scenario
 
 
@@ -36,6 +37,12 @@ class Simulator:
         )
         self.control_icons = self._load_control_icons(project_directory / "assets" / "global")
         self.robots = [Robot(definition) for definition in scenario.robots]
+        self.localization_sensor = SimulatedLocalizationSensor(
+            scenario.meters_per_pixel,
+            sigma_m=scenario.localization_sensor.sigma_m,
+            bias_m=scenario.localization_sensor.bias_m,
+            seed=scenario.localization_sensor.seed,
+        )
         self.navigations = [NavigationController(robot, self.environment) for robot in self.robots]
         self.selected_robot_index = 0
         self.simulation_speed_index = self.SIMULATION_SPEEDS.index(1.0)
@@ -63,6 +70,16 @@ class Simulator:
                 navigation.tick(delta_time)
             self._render()
 
+        if self.mission_dispatcher is not None:
+            assurance_runtime = getattr(self.mission_dispatcher, "assurance_runtime", None)
+            if assurance_runtime is not None:
+                assurance_runtime.write_metrics(
+                    {
+                        "completed": self.mission_dispatcher.completed,
+                        "error": self.mission_dispatcher.error_message,
+                        "recovery_action": self.mission_dispatcher.recovery_action,
+                    }
+                )
         pygame.quit()
 
     def _handle_events(self) -> None:
